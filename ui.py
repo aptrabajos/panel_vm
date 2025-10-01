@@ -228,6 +228,8 @@ class VMPanelWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
+        print("🎯 Inicializando VMPanelWindow...")
+        
         self.vm_manager = VMManager()
         self.vm_cards = {}
         
@@ -238,6 +240,8 @@ class VMPanelWindow(Adw.ApplicationWindow):
         self.set_title("Panel de Máquinas Virtuales")
         self.set_default_size(800, 600)
         self.set_size_request(600, 400)
+        
+        print(f"🎯 Ventana configurada: {self.get_title()}")
         
         # Configurar sistema de notificaciones después de crear el contenido
         self.notification_manager = None
