@@ -203,6 +203,9 @@ class VMPanelWindow(Adw.ApplicationWindow):
         self.vm_manager = VMManager()
         self.vm_cards = {}
         
+        # Cargar estilos CSS
+        self.load_css()
+        
         # Configuración de la ventana
         self.set_title("Panel de Máquinas Virtuales")
         self.set_default_size(800, 600)
