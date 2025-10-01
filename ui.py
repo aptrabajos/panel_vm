@@ -243,9 +243,7 @@ class VMPanelWindow(Adw.ApplicationWindow):
         self.notification_manager = None
         self.error_handler = None
         
-        # Header bar
-        header = Adw.HeaderBar()
-        self.set_titlebar(header)
+        # Header bar - NO usar set_titlebar con AdwApplicationWindow
         
         # Botón de actualizar en el header
         refresh_btn = Gtk.Button.new_from_icon_name("view-refresh-symbolic")
