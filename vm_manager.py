@@ -162,3 +162,22 @@ class VMManager:
         except Exception as e:
             logger.error(f"Error obteniendo estadísticas de {vm_name}: {e}")
             return None
+    
+    def _check_system_requirements(self):
+        """Verifica los requisitos del sistema"""
+        try:
+            # Verificar si virsh está disponible
+            result = subprocess.run(["which", "virsh"], capture_output=True, text=True)
+            if result.returncode != 0:
+                logger.warning("virsh no está instalado o no está en el PATH")
+                return
+            
+            # Verificar si libvirtd está ejecutándose
+            result = subprocess.run(["systemctl", "is-active", "libvirtd"], capture_output=True, text=True)
+            if result.returncode != 0:
+                logger.warning("libvirtd no está ejecutándose")
+                return
+            
+            logger.info("Requisitos del sistema verificados correctamente")
+        except Exception as e:
+            logger.warning(f"Error verificando requisitos del sistema: {e}")
