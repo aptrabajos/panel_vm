@@ -11,6 +11,7 @@ class VMManager:
     def __init__(self):
         self.connection_uri = "qemu:///system"
         self.vm_names = ["manjaro1", "manjaro2"]
+        self._check_system_requirements()
     
     def _run_virsh_command(self, args: List[str]) -> tuple[bool, str]:
         """Ejecuta un comando virsh y retorna el resultado"""
