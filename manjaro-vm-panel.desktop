@@ -1,0 +1,17 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Panel de VMs Manjaro
+Name[en]=Manjaro VM Panel
+Comment=Panel de control para administrar máquinas virtuales QEMU/KVM
+Comment[en]=Control panel for managing QEMU/KVM virtual machines
+GenericName=Virtual Machine Manager
+GenericName[en]=Virtual Machine Manager
+Exec=/usr/bin/python3 /home/manjarodesktop/2025/configuraciones/panel_vm/main.py
+Icon=computer
+Terminal=false
+StartupNotify=true
+Categories=System;Emulation;Virtualization;
+Keywords=VM;Virtual;Machine;QEMU;KVM;virsh;manjaro1;manjaro2;
+MimeType=application/x-qemu-disk;
+StartupWMClass=manjaro-vm-panel
