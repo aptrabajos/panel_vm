@@ -239,6 +239,10 @@ class VMPanelWindow(Adw.ApplicationWindow):
         self.set_default_size(800, 600)
         self.set_size_request(600, 400)
         
+        # Configurar sistema de notificaciones después de crear el contenido
+        self.notification_manager = None
+        self.error_handler = None
+        
         # Header bar
         header = Adw.HeaderBar()
         self.set_titlebar(header)
