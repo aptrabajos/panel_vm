@@ -256,6 +256,21 @@ class VMPanelWindow(Adw.ApplicationWindow):
         # Crear ToastOverlay para notificaciones
         toast_overlay = Adw.ToastOverlay()
         
+        # Crear ToolbarView que incluye header y contenido
+        toolbar_view = Adw.ToolbarView()
+        
+        # Header bar
+        header = Adw.HeaderBar()
+        
+        # Botón de actualizar en el header
+        refresh_btn = Gtk.Button.new_from_icon_name("view-refresh-symbolic")
+        refresh_btn.set_tooltip_text("Actualizar estado de VMs")
+        refresh_btn.connect('clicked', self.on_refresh_clicked)
+        header.pack_end(refresh_btn)
+        
+        # Añadir header al toolbar view
+        toolbar_view.add_top_bar(header)
+        
         # Contenedor principal con scroll
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
