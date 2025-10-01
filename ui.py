@@ -171,16 +171,31 @@ class VMCard(Gtk.Box):
                 self.cpu_label.set_text("CPU: VM apagada")
                 self.memory_label.set_text("Memoria: VM apagada")
     
-    def execute_vm_action(self, action_func, success_message):
+    def execute_vm_action(self, action_func, success_message, operation_name):
         """Ejecuta una acción de VM en un hilo separado"""
         def run_action():
             GLib.idle_add(self.set_loading, True)
-            success = action_func(self.vm_name)
-            time.sleep(1)  # Pequeña pausa para que se vea la operación
-            GLib.idle_add(self.set_loading, False)
-            GLib.idle_add(self.update_vm_status)
-            if success:
-                print(f"{success_message} para {self.vm_name}")
+            
+            try:
+                success = action_func(self.vm_name)
+                time.sleep(1)  # Pequeña pausa para que se vea la operación
+                
+                GLib.idle_add(self.set_loading, False)
+                GLib.idle_add(self.update_vm_status)
+                
+                if success:
+                    if self.notification_manager:
+                        GLib.idle_add(self.notification_manager.show_success, 
+                                    f"{success_message} para {self.vm_name}")
+                else:
+                    if self.error_handler:
+                        GLib.idle_add(self.error_handler.handle_vm_operation_error,
+                                    self.vm_name, operation_name, "Operación falló")
+            except Exception as e:
+                GLib.idle_add(self.set_loading, False)
+                if self.error_handler:
+                    GLib.idle_add(self.error_handler.handle_vm_operation_error,
+                                self.vm_name, operation_name, str(e))
         
         thread = threading.Thread(target=run_action)
         thread.daemon = True
