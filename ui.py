@@ -5,6 +5,7 @@ gi.require_version('Adw', '1')
 
 from gi.repository import Gtk, Adw, GLib, Gio
 from vm_manager import VMManager
+from notifications import NotificationManager, ErrorHandler
 import threading
 import time
 import os
