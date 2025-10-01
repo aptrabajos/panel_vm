@@ -21,7 +21,12 @@ class VMPanelApp(Adw.Application):
         win = self.props.active_window
         if not win:
             win = VMPanelWindow(application=self)
+            print("✓ Ventana creada")
+        
+        # Asegurar que la ventana sea visible
+        win.set_visible(True)
         win.present()
+        print("✓ Ventana presentada")
 
     def create_action(self, name, callback, shortcuts=None):
         action = Gio.SimpleAction.new(name, None)
