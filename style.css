@@ -159,14 +159,13 @@ button:focus {
     outline-offset: 2px;
 }
 
-/* Responsive design para ventanas pequeñas */
-@media (max-width: 600px) {
-    .vm-card {
-        margin: 4px;
-    }
-    
-    .vm-control-button {
-        min-width: 60px;
-        font-size: 12px;
-    }
+/* Responsive design para ventanas pequeñas - GTK4 no soporta @media queries */
+/* Usar clases específicas en su lugar */
+.compact .vm-card {
+    margin: 4px;
+}
+
+.compact .vm-control-button {
+    min-width: 60px;
+    font-size: 12px;
 }
