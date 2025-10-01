@@ -71,20 +71,23 @@ class VMCard(Gtk.Box):
         button_box.set_halign(Gtk.Align.CENTER)
         
         self.start_btn = Gtk.Button.new_with_label("Iniciar")
-        self.start_btn.set_css_classes(['suggested-action'])
+        self.start_btn.set_css_classes(['vm-control-button', 'start-button'])
         self.start_btn.connect('clicked', self.on_start_clicked)
         
         self.shutdown_btn = Gtk.Button.new_with_label("Apagar")
+        self.shutdown_btn.set_css_classes(['vm-control-button', 'stop-button'])
         self.shutdown_btn.connect('clicked', self.on_shutdown_clicked)
         
         self.reboot_btn = Gtk.Button.new_with_label("Reiniciar")
+        self.reboot_btn.set_css_classes(['vm-control-button', 'restart-button'])
         self.reboot_btn.connect('clicked', self.on_reboot_clicked)
         
         self.save_btn = Gtk.Button.new_with_label("Pausar")
+        self.save_btn.set_css_classes(['vm-control-button', 'pause-button'])
         self.save_btn.connect('clicked', self.on_save_clicked)
         
         self.destroy_btn = Gtk.Button.new_with_label("Forzar")
-        self.destroy_btn.set_css_classes(['destructive-action'])
+        self.destroy_btn.set_css_classes(['vm-control-button', 'stop-button'])
         self.destroy_btn.connect('clicked', self.on_destroy_clicked)
         
         button_box.append(self.start_btn)
