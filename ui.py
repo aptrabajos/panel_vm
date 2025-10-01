@@ -307,7 +307,8 @@ class VMPanelWindow(Adw.ApplicationWindow):
         main_box.append(self.vms_box)
         
         scroll.set_child(main_box)
-        toast_overlay.set_child(scroll)
+        toolbar_view.set_content(scroll)
+        toast_overlay.set_child(toolbar_view)
         self.set_content(toast_overlay)
         
         # Configurar sistema de notificaciones ahora que el contenido está creado
