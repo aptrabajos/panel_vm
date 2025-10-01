@@ -7,6 +7,7 @@ from gi.repository import Gtk, Adw, GLib, Gio
 from vm_manager import VMManager
 import threading
 import time
+import os
 
 class VMCard(Gtk.Box):
     def __init__(self, vm_name, vm_manager):
