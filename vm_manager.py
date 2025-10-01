@@ -15,8 +15,16 @@ class VMManager:
     def _run_virsh_command(self, args: List[str]) -> tuple[bool, str]:
         """Ejecuta un comando virsh y retorna el resultado"""
         try:
-            cmd = ["sudo", "virsh", "-c", self.connection_uri] + args
+            # Intentar primero sin sudo
+            cmd = ["virsh", "-c", self.connection_uri] + args
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            
+            # Si falla, intentar con sudo usando NOPASSWD o pkexec
+            if result.returncode != 0:
+                # Intentar con pkexec para GUI
+                cmd = ["pkexec", "virsh", "-c", self.connection_uri] + args
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            
             success = result.returncode == 0
             output = result.stdout if success else result.stderr
             return success, output
