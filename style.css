@@ -1,0 +1,172 @@
+/* Estilos para el Panel de VMs */
+
+/* Estilos generales de la ventana */
+window {
+    background: @theme_bg_color;
+}
+
+/* Estilo para las tarjetas de VM */
+.vm-card {
+    background: @card_bg_color;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 8px;
+    transition: all 200ms ease;
+}
+
+.vm-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+/* Indicadores de estado */
+.status-running {
+    color: @success_color;
+    font-weight: bold;
+}
+
+.status-stopped {
+    color: @error_color;
+    font-weight: bold;
+}
+
+.status-paused {
+    color: @warning_color;
+    font-weight: bold;
+}
+
+/* Botones personalizados */
+.vm-control-button {
+    min-height: 36px;
+    min-width: 80px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 150ms ease;
+}
+
+.vm-control-button:hover {
+    transform: scale(1.05);
+}
+
+.start-button {
+    background: linear-gradient(135deg, @success_color, #2ec27e);
+    color: white;
+    border: none;
+}
+
+.start-button:hover {
+    background: linear-gradient(135deg, #2ec27e, @success_color);
+}
+
+.stop-button {
+    background: linear-gradient(135deg, @destructive_color, #e01b24);
+    color: white;
+    border: none;
+}
+
+.stop-button:hover {
+    background: linear-gradient(135deg, #e01b24, @destructive_color);
+}
+
+.restart-button {
+    background: linear-gradient(135deg, @accent_color, #1c71d8);
+    color: white;
+    border: none;
+}
+
+.restart-button:hover {
+    background: linear-gradient(135deg, #1c71d8, @accent_color);
+}
+
+.pause-button {
+    background: linear-gradient(135deg, @warning_color, #f5c211);
+    color: @dark_1;
+    border: none;
+}
+
+.pause-button:hover {
+    background: linear-gradient(135deg, #f5c211, @warning_color);
+}
+
+/* Título principal */
+.main-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: @theme_fg_color;
+    margin-bottom: 16px;
+}
+
+.main-subtitle {
+    font-size: 14px;
+    color: @theme_unfocused_fg_color;
+    margin-bottom: 24px;
+}
+
+/* Información de VM */
+.vm-info {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+}
+
+.vm-info label {
+    font-size: 12px;
+    color: @theme_unfocused_fg_color;
+}
+
+/* Spinner personalizado */
+.vm-spinner {
+    color: @accent_color;
+    margin: 0 8px;
+}
+
+/* Separadores */
+separator {
+    background: rgba(0, 0, 0, 0.1);
+    min-height: 1px;
+    margin: 8px 0;
+}
+
+/* Header bar personalizado */
+.titlebar {
+    background: linear-gradient(135deg, @headerbar_bg_color, @headerbar_shade_color);
+}
+
+/* Efectos de hover para toda la tarjeta */
+.card {
+    transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Animaciones para cambios de estado */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+.updating {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Mejoras de accesibilidad */
+button:focus {
+    outline: 2px solid @accent_color;
+    outline-offset: 2px;
+}
+
+/* Responsive design para ventanas pequeñas */
+@media (max-width: 600px) {
+    .vm-card {
+        margin: 4px;
+    }
+    
+    .vm-control-button {
+        min-width: 60px;
+        font-size: 12px;
+    }
+}
