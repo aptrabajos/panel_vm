@@ -293,14 +293,24 @@ class VMPanelWindow(Adw.ApplicationWindow):
         
         # Crear tarjetas para cada VM
         for vm_name in self.vm_manager.vm_names:
-            vm_card = VMCard(vm_name, self.vm_manager)
+            vm_card = VMCard(vm_name, self.vm_manager, self.notification_manager, self.error_handler)
             self.vm_cards[vm_name] = vm_card
             self.vms_box.append(vm_card)
         
         main_box.append(self.vms_box)
         
         scroll.set_child(main_box)
-        self.set_content(scroll)
+        toast_overlay.set_child(scroll)
+        self.set_content(toast_overlay)
+        
+        # Configurar sistema de notificaciones ahora que el contenido está creado
+        self.notification_manager = NotificationManager(self)
+        self.error_handler = ErrorHandler(self.notification_manager)
+        
+        # Actualizar las VMCards con los managers
+        for vm_card in self.vm_cards.values():
+            vm_card.notification_manager = self.notification_manager
+            vm_card.error_handler = self.error_handler
     
     def setup_auto_update(self):
         """Configura la actualización automática cada 5 segundos"""
