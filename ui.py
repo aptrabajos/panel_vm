@@ -143,7 +143,7 @@ class VMCard(Gtk.Box):
                 self.shutdown_btn.set_visible(True)
                 self.reboot_btn.set_visible(True)
                 self.save_btn.set_visible(True)
-            elif state == 'shut off':
+            elif state in ['shut off', 'apagado', 'apagada']:
                 self.status_label.set_markup('<span color="#c01c28">● Apagada</span>')
                 self.start_btn.set_visible(True)
                 self.shutdown_btn.set_visible(False)
