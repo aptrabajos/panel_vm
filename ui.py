@@ -23,7 +23,7 @@ class VMCard(Gtk.Box):
         
         # Crear el contenedor principal de la tarjeta
         self.card = Gtk.Frame()
-        self.card.set_css_classes(['card'])
+        self.card.set_css_classes(['card', 'vm-card'])
         
         # Contenedor interno
         card_content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
