@@ -281,3 +281,16 @@ class VMPanelWindow(Adw.ApplicationWindow):
         """Maneja el clic del botón de actualizar"""
         for vm_card in self.vm_cards.values():
             vm_card.update_vm_status()
+    
+    def load_css(self):
+        """Carga los estilos CSS personalizados"""
+        css_provider = Gtk.CssProvider()
+        css_file = os.path.join(os.path.dirname(__file__), 'style.css')
+        
+        if os.path.exists(css_file):
+            css_provider.load_from_path(css_file)
+            Gtk.StyleContext.add_provider_for_display(
+                self.get_display(),
+                css_provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            )
