@@ -54,11 +54,13 @@ class VMManager:
                     vm_state = ' '.join(parts[2:])
                     
                     if vm_name in self.vm_names:
+                        # Detectar si está ejecutándose (español e inglés)
+                        is_running = vm_state in ['running', 'ejecutando']
                         vms.append({
                             'id': vm_id,
                             'name': vm_name,
                             'state': vm_state,
-                            'running': vm_state == 'running'
+                            'running': is_running
                         })
         
         return vms
