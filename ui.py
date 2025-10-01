@@ -11,10 +11,12 @@ import time
 import os
 
 class VMCard(Gtk.Box):
-    def __init__(self, vm_name, vm_manager):
+    def __init__(self, vm_name, vm_manager, notification_manager=None, error_handler=None):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.vm_name = vm_name
         self.vm_manager = vm_manager
+        self.notification_manager = notification_manager
+        self.error_handler = error_handler
         self.is_updating = False
         
         self.set_margin_top(12)
