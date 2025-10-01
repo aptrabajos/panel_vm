@@ -261,6 +261,9 @@ class VMPanelWindow(Adw.ApplicationWindow):
     
     def create_main_content(self):
         """Crea el contenido principal de la ventana"""
+        # Crear ToastOverlay para notificaciones
+        toast_overlay = Adw.ToastOverlay()
+        
         # Contenedor principal con scroll
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
