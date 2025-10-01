@@ -30,11 +30,24 @@ El panel está configurado para administrar las siguientes VMs:
 
 1. Clona o descarga este repositorio
 2. Navega al directorio del proyecto
-3. Ejecuta el script de instalación:
+3. Ejecuta uno de los scripts de configuración:
 
+**Opción A - Configuración completa (recomendada):**
+```bash
+./setup_gui.sh
+```
+
+**Opción B - Solo configuración básica:**
+```bash
+./setup_simple.sh
+```
+
+**Opción C - Instalación completa del sistema:**
 ```bash
 ./install.sh
 ```
+
+**Si los scripts no funcionan**, consulta `CONFIGURACION_MANUAL.md`
 
 ### Instalación manual
 
