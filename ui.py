@@ -243,13 +243,7 @@ class VMPanelWindow(Adw.ApplicationWindow):
         self.notification_manager = None
         self.error_handler = None
         
-        # Header bar - NO usar set_titlebar con AdwApplicationWindow
-        
-        # Botón de actualizar en el header
-        refresh_btn = Gtk.Button.new_from_icon_name("view-refresh-symbolic")
-        refresh_btn.set_tooltip_text("Actualizar estado de VMs")
-        refresh_btn.connect('clicked', self.on_refresh_clicked)
-        header.pack_end(refresh_btn)
+        # Header bar con AdwHeaderBar para AdwApplicationWindow
         
         # Crear contenido principal
         self.create_main_content()
