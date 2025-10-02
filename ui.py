@@ -329,15 +329,9 @@ class VMCard(Gtk.Box):
         self.cpu_circular.set_value(cpu_percent)
         self.memory_circular.set_value(mem_percent)
 
-        # Agregar a historial y actualizar mini gráficos
-        self.cpu_history.append(cpu_percent)
-        self.memory_history.append(mem_percent)
-
-        # Actualizar mini gráficos de línea
-        for cpu_val in self.cpu_history:
-            self.cpu_line_chart.add_data_point(cpu_val)
-        for mem_val in self.memory_history:
-            self.memory_line_chart.add_data_point(mem_val)
+        # Agregar solo el nuevo valor al historial y mini gráficos
+        self.cpu_line_chart.add_data_point(cpu_percent)
+        self.memory_line_chart.add_data_point(mem_percent)
 
         # vCPUs con tiempo de CPU
         cpu_time = stats.get('cpu_time')
