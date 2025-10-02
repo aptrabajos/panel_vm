@@ -30,13 +30,13 @@ class NotificationManager:
     def show_success(self, message, timeout=3):
         """Muestra una notificación de éxito"""
         if self.toast_overlay:
-            toast = Adw.Toast.new(message)
+            toast = Adw.Toast.new(f"✓ {message}")
             toast.set_timeout(timeout)
             self.toast_overlay.add_toast(toast)
-        
+
         # También mostrar en logs
         logger.info(f"Éxito: {message}")
-        
+
         # Intentar mostrar notificación del sistema
         self._send_system_notification("VM Panel - Éxito", message, "dialog-information")
     
