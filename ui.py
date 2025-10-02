@@ -413,7 +413,7 @@ class VMCard(Gtk.Box):
     def _clear_detailed_stats(self):
         """Limpia las estadísticas detalladas"""
         self.cpu_circular.set_value(0, "0%")
-        self.memory_circular.set_value(0, "0%")
+        self.memory_circular.set_value(0, "0 GB", "RAM Asignada")
         self.vcpu_info_label.set_text("VM apagada")
         self.disk_usage_bar.set_value(0, 0, 0)
         self.disk_detail_label.set_text("VM apagada")
