@@ -236,10 +236,10 @@ class VMCard(Gtk.Box):
                 else:
                     self.ip_label.set_text("🌐 IP: Obteniendo...")
 
-                # Estadísticas básicas mejoradas
+                # Obtener estadísticas detalladas una sola vez
                 detailed_stats = self.vm_manager.get_vm_detailed_stats(self.vm_name)
                 if detailed_stats:
-                    # CPU
+                    # CPU básico
                     cpu_time = detailed_stats.get('cpu_time')
                     vcpu_current = detailed_stats.get('vcpu_current', 0)
                     if cpu_time:
@@ -253,7 +253,7 @@ class VMCard(Gtk.Box):
                     else:
                         self.cpu_label.set_text(f"⚙️ CPU: {vcpu_current} vCPUs activas")
 
-                    # Memoria
+                    # Memoria básica
                     mem_actual = detailed_stats.get('memory_actual')
                     mem_available = detailed_stats.get('memory_available')
                     if mem_actual and mem_available:
@@ -262,15 +262,12 @@ class VMCard(Gtk.Box):
                         self.memory_label.set_text(f"💾 Memoria: {mem_actual_gb:.1f} GB ({mem_percent:.0f}%)")
                     else:
                         self.memory_label.set_text("💾 Memoria: N/A")
+
+                    # Actualizar detalles expandibles
+                    self._update_detailed_stats(detailed_stats)
                 else:
                     self.cpu_label.set_text("⚙️ CPU: Información no disponible")
                     self.memory_label.set_text("💾 Memoria: Información no disponible")
-
-                # Estadísticas detalladas
-                detailed_stats = self.vm_manager.get_vm_detailed_stats(self.vm_name)
-                if detailed_stats:
-                    self._update_detailed_stats(detailed_stats)
-                else:
                     self._clear_detailed_stats()
 
                 self.details_expander.set_visible(True)
