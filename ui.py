@@ -310,49 +310,49 @@ class VMCard(Gtk.Box):
                 self.details_expander.set_visible(False)
 
     def _update_detailed_stats(self, stats):
-        """Actualiza las estadísticas detalladas"""
-        # vCPUs con tiempo de CPU
-        vcpu_count = stats.get('vcpu_count', 'N/A')
-        vcpu_current = stats.get('vcpu_current', 'N/A')
-        cpu_time = stats.get('cpu_time')
+        """Actualiza las estadísticas detalladas con gráficos"""
+        # Calcular porcentajes para gráficos circulares
+        mem_actual = stats.get('memory_actual')
+        mem_available = stats.get('memory_available')
 
+        # Calcular % de CPU (simplificado basado en vCPUs)
+        vcpu_count = stats.get('vcpu_count', 1)
+        vcpu_current = stats.get('vcpu_current', 0)
+        cpu_percent = (vcpu_current / vcpu_count * 100) if vcpu_count > 0 else 0
+
+        # Calcular % de Memoria
+        mem_percent = 0
+        if mem_actual and mem_available:
+            mem_percent = (mem_actual / mem_available) * 100
+
+        # Actualizar gráficos circulares
+        self.cpu_circular.set_value(cpu_percent)
+        self.memory_circular.set_value(mem_percent)
+
+        # Agregar a historial y actualizar mini gráficos
+        self.cpu_history.append(cpu_percent)
+        self.memory_history.append(mem_percent)
+
+        # Actualizar mini gráficos de línea
+        for cpu_val in self.cpu_history:
+            self.cpu_line_chart.add_data_point(cpu_val)
+        for mem_val in self.memory_history:
+            self.memory_line_chart.add_data_point(mem_val)
+
+        # vCPUs con tiempo de CPU
+        cpu_time = stats.get('cpu_time')
         if cpu_time:
-            # Convertir nanosegundos a segundos
             cpu_seconds = cpu_time / 1_000_000_000
             cpu_hours = cpu_seconds / 3600
             if cpu_hours >= 1:
-                self.vcpu_info_label.set_text(f"Activas: {vcpu_current} / {vcpu_count} | Tiempo: {cpu_hours:.1f}h")
+                self.vcpu_info_label.set_text(f"Activas: {vcpu_current} / {vcpu_count} | Tiempo total: {cpu_hours:.1f}h")
             else:
                 cpu_minutes = cpu_seconds / 60
-                self.vcpu_info_label.set_text(f"Activas: {vcpu_current} / {vcpu_count} | Tiempo: {cpu_minutes:.1f}m")
+                self.vcpu_info_label.set_text(f"Activas: {vcpu_current} / {vcpu_count} | Tiempo total: {cpu_minutes:.1f}m")
         else:
             self.vcpu_info_label.set_text(f"Activas: {vcpu_current} / {vcpu_count}")
 
-        # Memoria
-        mem_actual = stats.get('memory_actual')
-        mem_available = stats.get('memory_available')
-        if mem_actual and mem_available:
-            mem_percent = (mem_actual / mem_available) * 100
-            self.memory_bar.set_fraction(mem_actual / mem_available)
-            self.memory_bar.set_text(f"{mem_percent:.1f}%")
-
-            # Colorear según uso
-            if mem_percent < 70:
-                self.memory_bar.set_css_classes(['memory-bar', 'level-low'])
-            elif mem_percent < 85:
-                self.memory_bar.set_css_classes(['memory-bar', 'level-medium'])
-            else:
-                self.memory_bar.set_css_classes(['memory-bar', 'level-high'])
-
-            mem_actual_gb = mem_actual / (1024 * 1024)
-            mem_available_gb = mem_available / (1024 * 1024)
-            self.memory_detail_label.set_text(f"{mem_actual_gb:.2f} GB / {mem_available_gb:.2f} GB")
-        else:
-            self.memory_bar.set_fraction(0)
-            self.memory_bar.set_text("N/A")
-            self.memory_detail_label.set_text("No disponible")
-
-        # Disco con capacidad
+        # Disco con barra personalizada
         block_capacity = stats.get('block_capacity', 0)
         block_allocation = stats.get('block_allocation', 0)
 
@@ -360,37 +360,23 @@ class VMCard(Gtk.Box):
             capacity_gb = block_capacity / (1024 * 1024 * 1024)
             allocation_gb = block_allocation / (1024 * 1024 * 1024)
             usage_percent = (block_allocation / block_capacity) * 100 if block_capacity > 0 else 0
-            self.disk_read_label.set_text(f"💾 Capacidad: {capacity_gb:.1f} GB")
-            self.disk_write_label.set_text(f"📊 Usado: {allocation_gb:.1f} GB ({usage_percent:.1f}%)")
+
+            self.disk_usage_bar.set_value(usage_percent, allocation_gb, capacity_gb)
+            self.disk_detail_label.set_text(f"Dispositivos: {stats.get('block_count', 0)}")
         else:
-            read_bytes = stats.get('block_read_bytes', 0)
-            write_bytes = stats.get('block_write_bytes', 0)
+            self.disk_usage_bar.set_value(0, 0, 0)
+            self.disk_detail_label.set_text("Sin información de disco")
 
-            # Formatear automáticamente según el tamaño
-            def format_bytes(bytes_val):
-                if bytes_val >= 1024 * 1024 * 1024:  # GB
-                    return f"{bytes_val / (1024 * 1024 * 1024):.2f} GB"
-                elif bytes_val >= 1024 * 1024:  # MB
-                    return f"{bytes_val / (1024 * 1024):.2f} MB"
-                elif bytes_val >= 1024:  # KB
-                    return f"{bytes_val / 1024:.2f} KB"
-                else:
-                    return f"{bytes_val} B"
-
-            self.disk_read_label.set_text(f"📖 Lectura: {format_bytes(read_bytes)}")
-            self.disk_write_label.set_text(f"✏️ Escritura: {format_bytes(write_bytes)}")
-
-        # Red
+        # Red con formato
         rx_bytes = stats.get('net_rx_bytes', 0)
         tx_bytes = stats.get('net_tx_bytes', 0)
 
-        # Formatear automáticamente según el tamaño
         def format_bytes(bytes_val):
-            if bytes_val >= 1024 * 1024 * 1024:  # GB
+            if bytes_val >= 1024 * 1024 * 1024:
                 return f"{bytes_val / (1024 * 1024 * 1024):.2f} GB"
-            elif bytes_val >= 1024 * 1024:  # MB
+            elif bytes_val >= 1024 * 1024:
                 return f"{bytes_val / (1024 * 1024):.2f} MB"
-            elif bytes_val >= 1024:  # KB
+            elif bytes_val >= 1024:
                 return f"{bytes_val / 1024:.2f} KB"
             else:
                 return f"{bytes_val} B"
