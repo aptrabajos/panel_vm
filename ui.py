@@ -264,10 +264,22 @@ class VMCard(Gtk.Box):
 
     def _update_detailed_stats(self, stats):
         """Actualiza las estadísticas detalladas"""
-        # vCPUs
+        # vCPUs con tiempo de CPU
         vcpu_count = stats.get('vcpu_count', 'N/A')
         vcpu_current = stats.get('vcpu_current', 'N/A')
-        self.vcpu_info_label.set_text(f"Activas: {vcpu_current} / {vcpu_count}")
+        cpu_time = stats.get('cpu_time')
+
+        if cpu_time:
+            # Convertir nanosegundos a segundos
+            cpu_seconds = cpu_time / 1_000_000_000
+            cpu_hours = cpu_seconds / 3600
+            if cpu_hours >= 1:
+                self.vcpu_info_label.set_text(f"Activas: {vcpu_current} / {vcpu_count} | Tiempo: {cpu_hours:.1f}h")
+            else:
+                cpu_minutes = cpu_seconds / 60
+                self.vcpu_info_label.set_text(f"Activas: {vcpu_current} / {vcpu_count} | Tiempo: {cpu_minutes:.1f}m")
+        else:
+            self.vcpu_info_label.set_text(f"Activas: {vcpu_current} / {vcpu_count}")
 
         # Memoria
         mem_actual = stats.get('memory_actual')
@@ -285,29 +297,59 @@ class VMCard(Gtk.Box):
             else:
                 self.memory_bar.set_css_classes(['memory-bar', 'level-high'])
 
-            mem_actual_mb = mem_actual / 1024
-            mem_available_mb = mem_available / 1024
-            self.memory_detail_label.set_text(f"{mem_actual_mb:.1f} MB / {mem_available_mb:.1f} MB")
+            mem_actual_gb = mem_actual / (1024 * 1024)
+            mem_available_gb = mem_available / (1024 * 1024)
+            self.memory_detail_label.set_text(f"{mem_actual_gb:.2f} GB / {mem_available_gb:.2f} GB")
         else:
             self.memory_bar.set_fraction(0)
             self.memory_bar.set_text("N/A")
             self.memory_detail_label.set_text("No disponible")
 
-        # Disco
-        read_bytes = stats.get('block_read_bytes', 0)
-        write_bytes = stats.get('block_write_bytes', 0)
-        read_mb = read_bytes / (1024 * 1024)
-        write_mb = write_bytes / (1024 * 1024)
-        self.disk_read_label.set_text(f"📖 Lectura: {read_mb:.2f} MB")
-        self.disk_write_label.set_text(f"✏️ Escritura: {write_mb:.2f} MB")
+        # Disco con capacidad
+        block_capacity = stats.get('block_capacity', 0)
+        block_allocation = stats.get('block_allocation', 0)
+
+        if block_capacity > 0:
+            capacity_gb = block_capacity / (1024 * 1024 * 1024)
+            allocation_gb = block_allocation / (1024 * 1024 * 1024)
+            usage_percent = (block_allocation / block_capacity) * 100 if block_capacity > 0 else 0
+            self.disk_read_label.set_text(f"💾 Capacidad: {capacity_gb:.1f} GB")
+            self.disk_write_label.set_text(f"📊 Usado: {allocation_gb:.1f} GB ({usage_percent:.1f}%)")
+        else:
+            read_bytes = stats.get('block_read_bytes', 0)
+            write_bytes = stats.get('block_write_bytes', 0)
+
+            # Formatear automáticamente según el tamaño
+            def format_bytes(bytes_val):
+                if bytes_val >= 1024 * 1024 * 1024:  # GB
+                    return f"{bytes_val / (1024 * 1024 * 1024):.2f} GB"
+                elif bytes_val >= 1024 * 1024:  # MB
+                    return f"{bytes_val / (1024 * 1024):.2f} MB"
+                elif bytes_val >= 1024:  # KB
+                    return f"{bytes_val / 1024:.2f} KB"
+                else:
+                    return f"{bytes_val} B"
+
+            self.disk_read_label.set_text(f"📖 Lectura: {format_bytes(read_bytes)}")
+            self.disk_write_label.set_text(f"✏️ Escritura: {format_bytes(write_bytes)}")
 
         # Red
         rx_bytes = stats.get('net_rx_bytes', 0)
         tx_bytes = stats.get('net_tx_bytes', 0)
-        rx_mb = rx_bytes / (1024 * 1024)
-        tx_mb = tx_bytes / (1024 * 1024)
-        self.net_rx_label.set_text(f"⬇️ Recibido: {rx_mb:.2f} MB")
-        self.net_tx_label.set_text(f"⬆️ Enviado: {tx_mb:.2f} MB")
+
+        # Formatear automáticamente según el tamaño
+        def format_bytes(bytes_val):
+            if bytes_val >= 1024 * 1024 * 1024:  # GB
+                return f"{bytes_val / (1024 * 1024 * 1024):.2f} GB"
+            elif bytes_val >= 1024 * 1024:  # MB
+                return f"{bytes_val / (1024 * 1024):.2f} MB"
+            elif bytes_val >= 1024:  # KB
+                return f"{bytes_val / 1024:.2f} KB"
+            else:
+                return f"{bytes_val} B"
+
+        self.net_rx_label.set_text(f"⬇️ Recibido: {format_bytes(rx_bytes)}")
+        self.net_tx_label.set_text(f"⬆️ Enviado: {format_bytes(tx_bytes)}")
 
     def _clear_detailed_stats(self):
         """Limpia las estadísticas detalladas"""
