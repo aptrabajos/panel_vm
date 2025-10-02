@@ -315,14 +315,37 @@ class VMCard(Gtk.Box):
 
     def _update_detailed_stats(self, stats):
         """Actualiza las estadísticas detalladas con gráficos"""
+        import time as time_module
+
         # Calcular porcentajes para gráficos circulares
         mem_actual = stats.get('memory_actual')
         mem_available = stats.get('memory_available')
-
-        # Calcular % de CPU (simplificado basado en vCPUs)
         vcpu_count = stats.get('vcpu_count', 1)
         vcpu_current = stats.get('vcpu_current', 0)
-        cpu_percent = (vcpu_current / vcpu_count * 100) if vcpu_count > 0 else 0
+        cpu_time = stats.get('cpu_time')  # En nanosegundos
+
+        # Calcular % real de uso de CPU basado en tiempo
+        cpu_percent = 0
+        current_time = time_module.time()
+
+        if cpu_time and self.last_cpu_time is not None and self.last_update_time is not None:
+            # Delta de tiempo de CPU en nanosegundos
+            cpu_time_delta = cpu_time - self.last_cpu_time
+            # Delta de tiempo real en segundos
+            real_time_delta = current_time - self.last_update_time
+
+            # Convertir delta de CPU a segundos
+            cpu_time_delta_seconds = cpu_time_delta / 1_000_000_000
+
+            # Calcular porcentaje considerando todas las vCPUs
+            # % = (tiempo_cpu_usado / (tiempo_real * num_vcpus)) * 100
+            if real_time_delta > 0 and vcpu_count > 0:
+                cpu_percent = (cpu_time_delta_seconds / (real_time_delta * vcpu_count)) * 100
+                cpu_percent = max(0, min(100, cpu_percent))  # Limitar entre 0-100%
+
+        # Guardar valores actuales para próxima iteración
+        self.last_cpu_time = cpu_time
+        self.last_update_time = current_time
 
         # Calcular % de Memoria
         mem_percent = 0
