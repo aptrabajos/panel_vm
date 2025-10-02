@@ -524,7 +524,45 @@ class VMManager:
         except Exception as e:
             logger.error(f"Error obteniendo info de vCPU de {vm_name}: {e}")
             return None
-    
+
+    def get_vm_uptime(self, vm_name: str) -> Optional[int]:
+        """Obtiene el uptime de la VM en segundos"""
+        try:
+            success, stdout, stderr = self._run_virsh_command(["qemu-agent-command", vm_name, '{"execute":"guest-get-time"}'])
+
+            if not success:
+                # Fallback: calcular desde cpu.time si no hay guest-agent
+                detailed_stats = self.get_vm_detailed_stats(vm_name)
+                if detailed_stats and detailed_stats.get('cpu_time'):
+                    # Aproximación: cpu_time / vcpu_count (no es exacto pero da una idea)
+                    cpu_time_ns = detailed_stats['cpu_time']
+                    vcpu_count = detailed_stats.get('vcpu_count', 1)
+                    uptime_seconds = int((cpu_time_ns / 1_000_000_000) / vcpu_count)
+                    return uptime_seconds
+                return None
+
+            import json
+            result = json.loads(stdout)
+            # guest-get-time retorna nanosegundos desde epoch
+            # No es uptime directamente, necesitamos guest-info
+
+            # Intentar con guest-info para obtener boot time
+            success2, stdout2, stderr2 = self._run_virsh_command(["qemu-agent-command", vm_name, '{"execute":"guest-info"}'])
+            if success2:
+                import time
+                # Si tenemos guest-agent, usamos cpu.time como aproximación de uptime
+                detailed_stats = self.get_vm_detailed_stats(vm_name)
+                if detailed_stats and detailed_stats.get('cpu_time'):
+                    cpu_time_ns = detailed_stats['cpu_time']
+                    vcpu_count = detailed_stats.get('vcpu_count', 1)
+                    uptime_seconds = int((cpu_time_ns / 1_000_000_000) / max(1, vcpu_count))
+                    return uptime_seconds
+
+            return None
+        except Exception as e:
+            logger.debug(f"Error obteniendo uptime de {vm_name}: {e}")
+            return None
+
     def _check_system_requirements(self):
         """Verifica los requisitos del sistema"""
         try:
