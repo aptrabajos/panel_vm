@@ -324,25 +324,33 @@ class VMManager:
     def get_vm_ip_address(self, vm_name: str) -> Optional[str]:
         """Obtiene la dirección IP de una VM en ejecución"""
         try:
-            success, stdout, stderr = self._run_virsh_command(["domifaddr", vm_name])
+            # Intentar con múltiples fuentes: lease (DHCP), agent (guest agent), arp
+            sources = ['lease', 'agent', 'arp']
 
-            if not success:
-                logger.debug(f"No se pudo obtener IP de {vm_name}: {stderr}")
-                return None
+            for source in sources:
+                success, stdout, stderr = self._run_virsh_command(["domifaddr", vm_name, "--source", source])
 
-            # Parsear la salida para extraer la IP
-            # Formato: Name       MAC address          Protocol     Address
-            #          vnet0      52:54:00:xx:xx:xx    ipv4         192.168.122.x/24
-            lines = stdout.strip().split('\n')
-            for line in lines[2:]:  # Saltar las primeras 2 líneas (headers)
-                if line.strip():
-                    parts = line.split()
-                    if len(parts) >= 4 and parts[2] == 'ipv4':
-                        # Extraer solo la IP sin la máscara
-                        ip_with_mask = parts[3]
-                        ip = ip_with_mask.split('/')[0]
-                        return ip
+                if success and stdout:
+                    # Parsear la salida para extraer la IP
+                    # Formato: Name       MAC address          Protocol     Address
+                    #          vnet0      52:54:00:xx:xx:xx    ipv4         192.168.122.x/24
+                    lines = stdout.strip().split('\n')
+                    for line in lines[2:]:  # Saltar las primeras 2 líneas (headers)
+                        if line.strip():
+                            parts = line.split()
+                            if len(parts) >= 4:
+                                # Buscar dirección IPv4
+                                for part in parts:
+                                    if '.' in part and '/' in part:
+                                        # Extraer solo la IP sin la máscara
+                                        ip = part.split('/')[0]
+                                        # Validar que sea una IP válida
+                                        octets = ip.split('.')
+                                        if len(octets) == 4 and all(o.isdigit() and 0 <= int(o) <= 255 for o in octets):
+                                            logger.debug(f"IP obtenida de {vm_name} usando fuente {source}: {ip}")
+                                            return ip
 
+            logger.debug(f"No se pudo obtener IP de {vm_name} con ninguna fuente")
             return None
         except Exception as e:
             logger.error(f"Error obteniendo IP de {vm_name}: {e}")
