@@ -1,6 +1,4 @@
 import subprocess
-import json
-import xml.etree.ElementTree as ET
 from typing import List, Dict, Optional, Tuple
 import logging
 
