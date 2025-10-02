@@ -7,6 +7,13 @@ Un panel de control profesional y moderno para administrar máquinas virtuales Q
 - **Interfaz moderna**: Diseñado con GTK4 y libadwaita para una integración perfecta con el escritorio
 - **Control completo**: Iniciar, apagar, reiniciar, pausar y forzar apagado de VMs
 - **Monitoreo en tiempo real**: Estado actualizado automáticamente cada 5 segundos
+- **Monitoreo avanzado**:
+  - 🌐 Dirección IP de cada VM
+  - ⚙️ Uso de CPUs virtuales (vCPUs activas/totales)
+  - 💾 Memoria RAM con barra de progreso colorizada
+  - 📊 Uso de disco (lectura/escritura en MB)
+  - 🌐 Tráfico de red (recibido/enviado en MB)
+  - 📈 Sección expandible "Ver detalles avanzados" con métricas completas
 - **Notificaciones**: Sistema de notificaciones integrado para feedback de operaciones
 - **Manejo de errores**: Mensajes de error claros y específicos
 - **Integración con escritorio**: Aparece en el menú de aplicaciones
