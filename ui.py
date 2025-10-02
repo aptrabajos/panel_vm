@@ -221,26 +221,26 @@ class VMCard(Gtk.Box):
         thread.start()
     
     def on_start_clicked(self, button):
-        self.execute_vm_action(self.vm_manager.start_vm, "VM iniciada", "start")
-    
+        self.execute_vm_action(self.vm_manager.start_vm, f"VM '{self.vm_name}' iniciada exitosamente", "start")
+
     def on_shutdown_clicked(self, button):
-        self.execute_vm_action(self.vm_manager.shutdown_vm, "VM apagándose", "shutdown")
-    
+        self.execute_vm_action(self.vm_manager.shutdown_vm, f"VM '{self.vm_name}' apagándose", "shutdown")
+
     def on_reboot_clicked(self, button):
-        self.execute_vm_action(self.vm_manager.reboot_vm, "VM reiniciándose", "reboot")
-    
+        self.execute_vm_action(self.vm_manager.reboot_vm, f"VM '{self.vm_name}' reiniciándose", "reboot")
+
     def on_save_clicked(self, button):
-        self.execute_vm_action(self.vm_manager.save_vm, "Estado de VM guardado", "save")
-    
+        self.execute_vm_action(self.vm_manager.save_vm, f"Estado de '{self.vm_name}' guardado", "save")
+
     def on_destroy_clicked(self, button):
         if self.notification_manager:
             self.notification_manager.show_confirmation_dialog(
                 "Confirmar acción destructiva",
-                f"¿Estás seguro de que quieres forzar el apagado de {self.vm_name}?",
-                lambda: self.execute_vm_action(self.vm_manager.destroy_vm, "VM forzadamente apagada", "destroy")
+                f"¿Estás seguro de que quieres forzar el apagado de '{self.vm_name}'?\n\nEsto puede causar pérdida de datos no guardados.",
+                lambda: self.execute_vm_action(self.vm_manager.destroy_vm, f"VM '{self.vm_name}' apagada forzadamente", "destroy")
             )
         else:
-            self.execute_vm_action(self.vm_manager.destroy_vm, "VM forzadamente apagada", "destroy")
+            self.execute_vm_action(self.vm_manager.destroy_vm, f"VM '{self.vm_name}' apagada forzadamente", "destroy")
 
 
 class VMPanelWindow(Adw.ApplicationWindow):
