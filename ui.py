@@ -173,6 +173,7 @@ class VMCard(Gtk.Box):
         card_content.append(header_box)
         card_content.append(Gtk.Separator())
         card_content.append(self.info_box)
+        card_content.append(self.details_expander)
         card_content.append(button_box)
         
         self.card.set_child(card_content)
