@@ -141,71 +141,151 @@ class VMManager:
     
     def get_vm_info(self, vm_name: str) -> Optional[Dict]:
         """Obtiene información detallada de una VM"""
-        success, output = self._run_virsh_command(["dominfo", vm_name])
+        success, stdout, stderr = self._run_virsh_command(["dominfo", vm_name])
         if not success:
+            logger.error(f"Error obteniendo info de {vm_name}: {stderr}")
             return None
-        
+
         info = {}
-        for line in output.strip().split('\n'):
+        for line in stdout.strip().split('\n'):
             if ':' in line:
                 key, value = line.split(':', 1)
                 info[key.strip()] = value.strip()
-        
+
         return info
-    
-    def start_vm(self, vm_name: str) -> bool:
-        """Inicia una VM"""
-        success, output = self._run_virsh_command(["start", vm_name])
+
+    def _validate_vm_exists(self, vm_name: str) -> bool:
+        """Valida que la VM exista"""
+        vms = self.list_all_vms()
+        return any(vm['name'] == vm_name for vm in vms)
+
+    def _validate_vm_running(self, vm_name: str) -> bool:
+        """Valida que la VM esté corriendo"""
+        vms = self.list_all_vms()
+        vm = next((v for v in vms if v['name'] == vm_name), None)
+        return vm is not None and vm['running']
+
+    def start_vm(self, vm_name: str) -> Tuple[bool, Optional[Dict[str, str]]]:
+        """Inicia una VM. Retorna (éxito, info_error)"""
+        # Validar que existe
+        if not self._validate_vm_exists(vm_name):
+            error_info = {
+                "type": "not_found",
+                "message": f"La VM '{vm_name}' no existe en el sistema",
+                "suggestion": "Verifica el nombre de la VM"
+            }
+            logger.error(f"VM {vm_name} no encontrada")
+            return False, error_info
+
+        # Validar que no esté ya corriendo
+        if self._validate_vm_running(vm_name):
+            error_info = {
+                "type": "already_running",
+                "message": f"La VM '{vm_name}' ya está en ejecución",
+                "suggestion": ""
+            }
+            logger.warning(f"VM {vm_name} ya está corriendo")
+            return False, error_info
+
+        success, stdout, stderr = self._run_virsh_command(["start", vm_name])
         if success:
             logger.info(f"VM {vm_name} iniciada exitosamente")
+            return True, None
         else:
-            logger.error(f"Error iniciando VM {vm_name}: {output}")
-        return success
-    
-    def shutdown_vm(self, vm_name: str) -> bool:
-        """Apaga una VM gracefully"""
-        success, output = self._run_virsh_command(["shutdown", vm_name])
+            error_info = self._parse_virsh_error(stderr, "start")
+            logger.error(f"Error iniciando VM {vm_name}: {stderr}")
+            return False, error_info
+
+    def shutdown_vm(self, vm_name: str) -> Tuple[bool, Optional[Dict[str, str]]]:
+        """Apaga una VM gracefully. Retorna (éxito, info_error)"""
+        if not self._validate_vm_running(vm_name):
+            error_info = {
+                "type": "not_running",
+                "message": f"La VM '{vm_name}' no está en ejecución",
+                "suggestion": "No se puede apagar una VM que no está corriendo"
+            }
+            logger.warning(f"VM {vm_name} no está corriendo")
+            return False, error_info
+
+        success, stdout, stderr = self._run_virsh_command(["shutdown", vm_name])
         if success:
             logger.info(f"VM {vm_name} siendo apagada")
+            return True, None
         else:
-            logger.error(f"Error apagando VM {vm_name}: {output}")
-        return success
-    
-    def destroy_vm(self, vm_name: str) -> bool:
-        """Fuerza el apagado de una VM"""
-        success, output = self._run_virsh_command(["destroy", vm_name])
+            error_info = self._parse_virsh_error(stderr, "shutdown")
+            logger.error(f"Error apagando VM {vm_name}: {stderr}")
+            return False, error_info
+
+    def destroy_vm(self, vm_name: str) -> Tuple[bool, Optional[Dict[str, str]]]:
+        """Fuerza el apagado de una VM. Retorna (éxito, info_error)"""
+        if not self._validate_vm_running(vm_name):
+            error_info = {
+                "type": "not_running",
+                "message": f"La VM '{vm_name}' no está en ejecución",
+                "suggestion": "No se puede forzar el apagado de una VM que no está corriendo"
+            }
+            logger.warning(f"VM {vm_name} no está corriendo")
+            return False, error_info
+
+        success, stdout, stderr = self._run_virsh_command(["destroy", vm_name])
         if success:
             logger.info(f"VM {vm_name} forzadamente apagada")
+            return True, None
         else:
-            logger.error(f"Error forzando apagado de VM {vm_name}: {output}")
-        return success
-    
-    def reboot_vm(self, vm_name: str) -> bool:
-        """Reinicia una VM"""
-        success, output = self._run_virsh_command(["reboot", vm_name])
+            error_info = self._parse_virsh_error(stderr, "destroy")
+            logger.error(f"Error forzando apagado de VM {vm_name}: {stderr}")
+            return False, error_info
+
+    def reboot_vm(self, vm_name: str) -> Tuple[bool, Optional[Dict[str, str]]]:
+        """Reinicia una VM. Retorna (éxito, info_error)"""
+        if not self._validate_vm_running(vm_name):
+            error_info = {
+                "type": "not_running",
+                "message": f"La VM '{vm_name}' no está en ejecución",
+                "suggestion": "No se puede reiniciar una VM que no está corriendo"
+            }
+            logger.warning(f"VM {vm_name} no está corriendo")
+            return False, error_info
+
+        success, stdout, stderr = self._run_virsh_command(["reboot", vm_name])
         if success:
             logger.info(f"VM {vm_name} siendo reiniciada")
+            return True, None
         else:
-            logger.error(f"Error reiniciando VM {vm_name}: {output}")
-        return success
-    
-    def save_vm(self, vm_name: str) -> bool:
-        """Guarda el estado de una VM (managed save)"""
-        success, output = self._run_virsh_command(["managedsave", vm_name])
+            error_info = self._parse_virsh_error(stderr, "reboot")
+            logger.error(f"Error reiniciando VM {vm_name}: {stderr}")
+            return False, error_info
+
+    def save_vm(self, vm_name: str) -> Tuple[bool, Optional[Dict[str, str]]]:
+        """Guarda el estado de una VM (managed save). Retorna (éxito, info_error)"""
+        if not self._validate_vm_running(vm_name):
+            error_info = {
+                "type": "not_running",
+                "message": f"La VM '{vm_name}' no está en ejecución",
+                "suggestion": "Solo se puede guardar el estado de una VM en ejecución"
+            }
+            logger.warning(f"VM {vm_name} no está corriendo")
+            return False, error_info
+
+        success, stdout, stderr = self._run_virsh_command(["managedsave", vm_name])
         if success:
             logger.info(f"Estado de VM {vm_name} guardado")
+            return True, None
         else:
-            logger.error(f"Error guardando estado de VM {vm_name}: {output}")
-        return success
-    
-    def remove_saved_state(self, vm_name: str) -> bool:
-        """Elimina el estado guardado de una VM"""
-        success, output = self._run_virsh_command(["managedsave-remove", vm_name])
+            error_info = self._parse_virsh_error(stderr, "save")
+            logger.error(f"Error guardando estado de VM {vm_name}: {stderr}")
+            return False, error_info
+
+    def remove_saved_state(self, vm_name: str) -> Tuple[bool, Optional[Dict[str, str]]]:
+        """Elimina el estado guardado de una VM. Retorna (éxito, info_error)"""
+        success, stdout, stderr = self._run_virsh_command(["managedsave-remove", vm_name])
         if success:
             logger.info(f"Estado guardado de VM {vm_name} eliminado")
+            return True, None
         else:
-            logger.error(f"Error eliminando estado guardado de VM {vm_name}: {output}")
-        return success
+            error_info = self._parse_virsh_error(stderr, "remove_saved_state")
+            logger.error(f"Error eliminando estado guardado de VM {vm_name}: {stderr}")
+            return False, error_info
     
     def get_vm_stats(self, vm_name: str) -> Optional[Dict]:
         """Obtiene estadísticas de CPU y memoria de una VM"""
