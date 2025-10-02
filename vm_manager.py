@@ -320,6 +320,155 @@ class VMManager:
         except Exception as e:
             logger.error(f"Error obteniendo estadísticas de {vm_name}: {e}")
             return None
+
+    def get_vm_ip_address(self, vm_name: str) -> Optional[str]:
+        """Obtiene la dirección IP de una VM en ejecución"""
+        try:
+            success, stdout, stderr = self._run_virsh_command(["domifaddr", vm_name])
+
+            if not success:
+                logger.debug(f"No se pudo obtener IP de {vm_name}: {stderr}")
+                return None
+
+            # Parsear la salida para extraer la IP
+            # Formato: Name       MAC address          Protocol     Address
+            #          vnet0      52:54:00:xx:xx:xx    ipv4         192.168.122.x/24
+            lines = stdout.strip().split('\n')
+            for line in lines[2:]:  # Saltar las primeras 2 líneas (headers)
+                if line.strip():
+                    parts = line.split()
+                    if len(parts) >= 4 and parts[2] == 'ipv4':
+                        # Extraer solo la IP sin la máscara
+                        ip_with_mask = parts[3]
+                        ip = ip_with_mask.split('/')[0]
+                        return ip
+
+            return None
+        except Exception as e:
+            logger.error(f"Error obteniendo IP de {vm_name}: {e}")
+            return None
+
+    def get_vm_detailed_stats(self, vm_name: str) -> Optional[Dict]:
+        """Obtiene estadísticas detalladas de CPU, memoria, disco y red"""
+        try:
+            success, stdout, stderr = self._run_virsh_command([
+                "domstats", "--vcpu", "--memory", "--block", "--interface", vm_name
+            ])
+
+            if not success:
+                logger.debug(f"No se pudieron obtener stats detalladas de {vm_name}: {stderr}")
+                return None
+
+            stats = {
+                'vcpu_count': None,
+                'vcpu_current': None,
+                'vcpu_time': None,
+                'memory_actual': None,
+                'memory_available': None,
+                'memory_unused': None,
+                'memory_usable': None,
+                'memory_rss': None,
+                'block_read_bytes': 0,
+                'block_write_bytes': 0,
+                'block_read_reqs': 0,
+                'block_write_reqs': 0,
+                'net_rx_bytes': 0,
+                'net_tx_bytes': 0,
+                'net_rx_pkts': 0,
+                'net_tx_pkts': 0,
+            }
+
+            # Parsear la salida
+            for line in stdout.split('\n'):
+                line = line.strip()
+                if '=' not in line:
+                    continue
+
+                key, value = line.split('=', 1)
+                key = key.strip()
+                value = value.strip()
+
+                # Estadísticas de vCPU
+                if key == 'vcpu.current':
+                    stats['vcpu_current'] = int(value)
+                elif key == 'vcpu.maximum':
+                    stats['vcpu_count'] = int(value)
+                elif key.startswith('vcpu.') and key.endswith('.time'):
+                    # Sumar el tiempo de todas las vCPUs
+                    if stats['vcpu_time'] is None:
+                        stats['vcpu_time'] = 0
+                    stats['vcpu_time'] += int(value)
+
+                # Estadísticas de memoria (en KB)
+                elif key == 'balloon.current':
+                    stats['memory_actual'] = int(value)
+                elif key == 'balloon.maximum':
+                    stats['memory_available'] = int(value)
+                elif key == 'memory.unused':
+                    stats['memory_unused'] = int(value)
+                elif key == 'memory.usable':
+                    stats['memory_usable'] = int(value)
+                elif key == 'memory.rss':
+                    stats['memory_rss'] = int(value)
+
+                # Estadísticas de disco
+                elif key.startswith('block.') and '.rd.bytes' in key:
+                    stats['block_read_bytes'] += int(value)
+                elif key.startswith('block.') and '.wr.bytes' in key:
+                    stats['block_write_bytes'] += int(value)
+                elif key.startswith('block.') and '.rd.reqs' in key:
+                    stats['block_read_reqs'] += int(value)
+                elif key.startswith('block.') and '.wr.reqs' in key:
+                    stats['block_write_reqs'] += int(value)
+
+                # Estadísticas de red
+                elif key.startswith('net.') and '.rx.bytes' in key:
+                    stats['net_rx_bytes'] += int(value)
+                elif key.startswith('net.') and '.tx.bytes' in key:
+                    stats['net_tx_bytes'] += int(value)
+                elif key.startswith('net.') and '.rx.pkts' in key:
+                    stats['net_rx_pkts'] += int(value)
+                elif key.startswith('net.') and '.tx.pkts' in key:
+                    stats['net_tx_pkts'] += int(value)
+
+            return stats
+        except Exception as e:
+            logger.error(f"Error obteniendo estadísticas detalladas de {vm_name}: {e}")
+            return None
+
+    def get_vm_vcpu_info(self, vm_name: str) -> Optional[List[Dict]]:
+        """Obtiene información detallada de las vCPUs"""
+        try:
+            success, stdout, stderr = self._run_virsh_command(["vcpuinfo", vm_name])
+
+            if not success:
+                logger.debug(f"No se pudo obtener info de vCPU de {vm_name}: {stderr}")
+                return None
+
+            vcpus = []
+            current_vcpu = {}
+
+            for line in stdout.split('\n'):
+                line = line.strip()
+                if not line:
+                    if current_vcpu:
+                        vcpus.append(current_vcpu)
+                        current_vcpu = {}
+                    continue
+
+                if ':' in line:
+                    key, value = line.split(':', 1)
+                    key = key.strip().lower().replace(' ', '_')
+                    value = value.strip()
+                    current_vcpu[key] = value
+
+            if current_vcpu:
+                vcpus.append(current_vcpu)
+
+            return vcpus if vcpus else None
+        except Exception as e:
+            logger.error(f"Error obteniendo info de vCPU de {vm_name}: {e}")
+            return None
     
     def _check_system_requirements(self):
         """Verifica los requisitos del sistema"""
