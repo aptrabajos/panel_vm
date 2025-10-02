@@ -102,7 +102,7 @@ class VMCard(Gtk.Box):
 
         # Gráfico circular de Memoria
         self.memory_circular = CircularProgressWidget(size=100)
-        self.memory_circular.set_value(0, "0%", "RAM")
+        self.memory_circular.set_value(0, "0 GB", "RAM Asignada")
         graphs_row.append(self.memory_circular)
 
         details_box.append(graphs_row)
