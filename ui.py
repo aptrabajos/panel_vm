@@ -165,9 +165,17 @@ class VMCard(Gtk.Box):
         details_box.append(self.disk_usage_bar)
 
         self.disk_detail_label = Gtk.Label()
+        self.disk_iops_label = Gtk.Label()
+        self.disk_latency_label = Gtk.Label()
         self.disk_detail_label.set_css_classes(['caption'])
+        self.disk_iops_label.set_css_classes(['caption'])
+        self.disk_latency_label.set_css_classes(['caption'])
         self.disk_detail_label.set_halign(Gtk.Align.START)
+        self.disk_iops_label.set_halign(Gtk.Align.START)
+        self.disk_latency_label.set_halign(Gtk.Align.START)
         details_box.append(self.disk_detail_label)
+        details_box.append(self.disk_iops_label)
+        details_box.append(self.disk_latency_label)
 
         details_box.append(Gtk.Separator())
 
