@@ -53,7 +53,7 @@ class VMManager:
             logger.error(error_msg)
             return False, "", error_msg
 
-    def _parse_virsh_error(self, stderr: str, operation: str) -> Dict[str, str]:
+    def _parse_virsh_error(self, stderr: str, _operation: str) -> Dict[str, str]:
         """Analiza el error de virsh y retorna información estructurada"""
         stderr_lower = stderr.lower()
 
