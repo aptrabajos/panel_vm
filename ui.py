@@ -438,9 +438,65 @@ class VMCard(Gtk.Box):
         else:
             self.vcpu_info_label.set_text(f"Activas: {vcpu_current} / {vcpu_count}")
 
-        # Disco con barra personalizada
+        # === Calcular métricas de red en tiempo real (MB/s) ===
+        rx_bytes = stats.get('net_rx_bytes', 0)
+        tx_bytes = stats.get('net_tx_bytes', 0)
+
+        net_rx_mbps = 0
+        net_tx_mbps = 0
+
+        if self.last_net_rx_bytes is not None and self.last_net_tx_bytes is not None and self.last_update_time is not None:
+            time_delta = current_time - self.last_update_time
+            if time_delta > 0:
+                # Calcular MB/s
+                rx_delta = rx_bytes - self.last_net_rx_bytes
+                tx_delta = tx_bytes - self.last_net_tx_bytes
+                net_rx_mbps = (rx_delta / time_delta) / (1024 * 1024)  # Convertir a MB/s
+                net_tx_mbps = (tx_delta / time_delta) / (1024 * 1024)
+                net_rx_mbps = max(0, net_rx_mbps)  # Evitar negativos
+                net_tx_mbps = max(0, net_tx_mbps)
+
+        self.last_net_rx_bytes = rx_bytes
+        self.last_net_tx_bytes = tx_bytes
+
+        # Agregar a historial de red (normalizar a 0-100 para gráficos, asumiendo max 100 MB/s)
+        net_rx_percent = min(100, (net_rx_mbps / 100) * 100)
+        net_tx_percent = min(100, (net_tx_mbps / 100) * 100)
+        self.net_rx_chart.add_data_point(net_rx_percent)
+        self.net_tx_chart.add_data_point(net_tx_percent)
+
+        # === Disco: calcular IOPS y latencia ===
         block_capacity = stats.get('block_capacity', 0)
         block_allocation = stats.get('block_allocation', 0)
+        block_read_reqs = stats.get('block_read_reqs', 0)
+        block_write_reqs = stats.get('block_write_reqs', 0)
+        block_read_bytes = stats.get('block_read_bytes', 0)
+        block_write_bytes = stats.get('block_write_bytes', 0)
+        block_rd_times = stats.get('block_rd_total_times', 0)
+        block_wr_times = stats.get('block_wr_total_times', 0)
+
+        # Calcular IOPS (operaciones por segundo)
+        read_iops = 0
+        write_iops = 0
+        avg_read_latency_ms = 0
+        avg_write_latency_ms = 0
+
+        if self.last_block_read_reqs is not None and self.last_block_write_reqs is not None and self.last_update_time is not None:
+            time_delta = current_time - self.last_update_time
+            if time_delta > 0:
+                read_ops_delta = block_read_reqs - self.last_block_read_reqs
+                write_ops_delta = block_write_reqs - self.last_block_write_reqs
+                read_iops = max(0, read_ops_delta / time_delta)
+                write_iops = max(0, write_ops_delta / time_delta)
+
+        self.last_block_read_reqs = block_read_reqs
+        self.last_block_write_reqs = block_write_reqs
+
+        # Calcular latencia promedio (nanosegundos a milisegundos)
+        if block_read_reqs > 0:
+            avg_read_latency_ms = (block_rd_times / block_read_reqs) / 1_000_000  # ns a ms
+        if block_write_reqs > 0:
+            avg_write_latency_ms = (block_wr_times / block_write_reqs) / 1_000_000
 
         if block_capacity > 0:
             capacity_gb = block_capacity / (1024 * 1024 * 1024)
@@ -449,9 +505,13 @@ class VMCard(Gtk.Box):
 
             self.disk_usage_bar.set_value(usage_percent, allocation_gb, capacity_gb)
             self.disk_detail_label.set_text(f"Dispositivos: {stats.get('block_count', 0)}")
+            self.disk_iops_label.set_text(f"📊 IOPS: {read_iops:.1f} lectura/s, {write_iops:.1f} escritura/s")
+            self.disk_latency_label.set_text(f"⏱️ Latencia: {avg_read_latency_ms:.2f}ms lectura, {avg_write_latency_ms:.2f}ms escritura")
         else:
             self.disk_usage_bar.set_value(0, 0, 0)
             self.disk_detail_label.set_text("Sin información de disco")
+            self.disk_iops_label.set_text("")
+            self.disk_latency_label.set_text("")
 
         # Red con formato
         rx_bytes = stats.get('net_rx_bytes', 0)
