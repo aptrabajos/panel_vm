@@ -18,8 +18,9 @@ class CircularProgressWidget(Gtk.DrawingArea):
         self.percentage = 0.0
         self.label = "0%"
         self.title = ""
+        # Aumentar altura para que quepa el título arriba
         self.set_content_width(size)
-        self.set_content_height(size)
+        self.set_content_height(size + 30)  # +30px para el título
         self.set_draw_func(self._on_draw)
 
     def set_value(self, percentage: float, label: str = None, title: str = None):
