@@ -347,8 +347,10 @@ class VMManager:
                                         # Validar que sea una IP válida
                                         octets = ip.split('.')
                                         if len(octets) == 4 and all(o.isdigit() and 0 <= int(o) <= 255 for o in octets):
-                                            logger.debug(f"IP obtenida de {vm_name} usando fuente {source}: {ip}")
-                                            return ip
+                                            # Excluir localhost y direcciones privadas no válidas
+                                            if ip != '127.0.0.1' and not ip.startswith('0.'):
+                                                logger.debug(f"IP obtenida de {vm_name} usando fuente {source}: {ip}")
+                                                return ip
 
             logger.debug(f"No se pudo obtener IP de {vm_name} con ninguna fuente")
             return None
