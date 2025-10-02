@@ -185,7 +185,7 @@ class VMManager:
             logger.warning(f"VM {vm_name} ya está corriendo")
             return False, error_info
 
-        success, stdout, stderr = self._run_virsh_command(["start", vm_name])
+        success, _stdout, stderr = self._run_virsh_command(["start", vm_name])
         if success:
             logger.info(f"VM {vm_name} iniciada exitosamente")
             return True, None
@@ -205,7 +205,7 @@ class VMManager:
             logger.warning(f"VM {vm_name} no está corriendo")
             return False, error_info
 
-        success, stdout, stderr = self._run_virsh_command(["shutdown", vm_name])
+        success, _stdout, stderr = self._run_virsh_command(["shutdown", vm_name])
         if success:
             logger.info(f"VM {vm_name} siendo apagada")
             return True, None
@@ -225,7 +225,7 @@ class VMManager:
             logger.warning(f"VM {vm_name} no está corriendo")
             return False, error_info
 
-        success, stdout, stderr = self._run_virsh_command(["destroy", vm_name])
+        success, _stdout, stderr = self._run_virsh_command(["destroy", vm_name])
         if success:
             logger.info(f"VM {vm_name} forzadamente apagada")
             return True, None
@@ -245,7 +245,7 @@ class VMManager:
             logger.warning(f"VM {vm_name} no está corriendo")
             return False, error_info
 
-        success, stdout, stderr = self._run_virsh_command(["reboot", vm_name])
+        success, _stdout, stderr = self._run_virsh_command(["reboot", vm_name])
         if success:
             logger.info(f"VM {vm_name} siendo reiniciada")
             return True, None
@@ -265,7 +265,7 @@ class VMManager:
             logger.warning(f"VM {vm_name} no está corriendo")
             return False, error_info
 
-        success, stdout, stderr = self._run_virsh_command(["managedsave", vm_name])
+        success, _stdout, stderr = self._run_virsh_command(["managedsave", vm_name])
         if success:
             logger.info(f"Estado de VM {vm_name} guardado")
             return True, None
@@ -276,7 +276,7 @@ class VMManager:
 
     def remove_saved_state(self, vm_name: str) -> Tuple[bool, Optional[Dict[str, str]]]:
         """Elimina el estado guardado de una VM. Retorna (éxito, info_error)"""
-        success, stdout, stderr = self._run_virsh_command(["managedsave-remove", vm_name])
+        success, _stdout, stderr = self._run_virsh_command(["managedsave-remove", vm_name])
         if success:
             logger.info(f"Estado guardado de VM {vm_name} eliminado")
             return True, None
