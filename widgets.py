@@ -85,13 +85,13 @@ class CircularProgressWidget(Gtk.DrawingArea):
         ctx.move_to(text_x, text_y)
         ctx.show_text(self.label)
 
-        # Título encima si existe
+        # Título encima si existe (con más espacio)
         if self.title:
             ctx.set_font_size(12)
             ctx.set_source_rgb(0.7, 0.7, 0.7)
             title_extents = ctx.text_extents(self.title)
             title_x = center_x - title_extents.width / 2
-            title_y = center_y - radius - 5
+            title_y = center_y - radius - 15  # Aumentado de 5 a 15 para más espacio
             ctx.move_to(title_x, title_y)
             ctx.show_text(self.title)
 
