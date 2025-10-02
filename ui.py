@@ -57,17 +57,87 @@ class VMCard(Gtk.Box):
         header_box.append(self.spinner)
         header_box.append(self.status_label)
         
-        # Información adicional
+        # Información básica
         self.info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.cpu_label = Gtk.Label()
         self.memory_label = Gtk.Label()
+        self.ip_label = Gtk.Label()
         self.cpu_label.set_css_classes(['caption'])
         self.memory_label.set_css_classes(['caption'])
+        self.ip_label.set_css_classes(['caption'])
         self.cpu_label.set_halign(Gtk.Align.START)
         self.memory_label.set_halign(Gtk.Align.START)
-        
+        self.ip_label.set_halign(Gtk.Align.START)
+
         self.info_box.append(self.cpu_label)
         self.info_box.append(self.memory_label)
+        self.info_box.append(self.ip_label)
+
+        # Expander para detalles avanzados
+        self.details_expander = Gtk.Expander()
+        self.details_expander.set_label("Ver detalles avanzados")
+
+        # Contenedor de detalles
+        details_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        details_box.set_margin_top(8)
+
+        # Sección de vCPUs
+        vcpu_label = Gtk.Label()
+        vcpu_label.set_markup('<span weight="bold">CPUs Virtuales</span>')
+        vcpu_label.set_halign(Gtk.Align.START)
+        self.vcpu_info_label = Gtk.Label()
+        self.vcpu_info_label.set_css_classes(['caption'])
+        self.vcpu_info_label.set_halign(Gtk.Align.START)
+
+        # Barra de memoria
+        memory_header = Gtk.Label()
+        memory_header.set_markup('<span weight="bold">Memoria</span>')
+        memory_header.set_halign(Gtk.Align.START)
+        self.memory_bar = Gtk.ProgressBar()
+        self.memory_bar.set_show_text(True)
+        self.memory_detail_label = Gtk.Label()
+        self.memory_detail_label.set_css_classes(['caption'])
+        self.memory_detail_label.set_halign(Gtk.Align.START)
+
+        # Sección de disco
+        disk_label = Gtk.Label()
+        disk_label.set_markup('<span weight="bold">Disco</span>')
+        disk_label.set_halign(Gtk.Align.START)
+        self.disk_read_label = Gtk.Label()
+        self.disk_write_label = Gtk.Label()
+        self.disk_read_label.set_css_classes(['caption'])
+        self.disk_write_label.set_css_classes(['caption'])
+        self.disk_read_label.set_halign(Gtk.Align.START)
+        self.disk_write_label.set_halign(Gtk.Align.START)
+
+        # Sección de red
+        net_label = Gtk.Label()
+        net_label.set_markup('<span weight="bold">Red</span>')
+        net_label.set_halign(Gtk.Align.START)
+        self.net_rx_label = Gtk.Label()
+        self.net_tx_label = Gtk.Label()
+        self.net_rx_label.set_css_classes(['caption'])
+        self.net_tx_label.set_css_classes(['caption'])
+        self.net_rx_label.set_halign(Gtk.Align.START)
+        self.net_tx_label.set_halign(Gtk.Align.START)
+
+        # Ensamblar detalles
+        details_box.append(vcpu_label)
+        details_box.append(self.vcpu_info_label)
+        details_box.append(Gtk.Separator())
+        details_box.append(memory_header)
+        details_box.append(self.memory_bar)
+        details_box.append(self.memory_detail_label)
+        details_box.append(Gtk.Separator())
+        details_box.append(disk_label)
+        details_box.append(self.disk_read_label)
+        details_box.append(self.disk_write_label)
+        details_box.append(Gtk.Separator())
+        details_box.append(net_label)
+        details_box.append(self.net_rx_label)
+        details_box.append(self.net_tx_label)
+
+        self.details_expander.set_child(details_box)
         
         # Botones de control
         button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
