@@ -6,9 +6,11 @@ gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, GLib, Gio
 from vm_manager import VMManager
 from notifications import NotificationManager, ErrorHandler
+from widgets import CircularProgressWidget, MiniLineChartWidget, DiskUsageBarWidget
 import threading
 import time
 import os
+from collections import deque
 
 class VMCard(Gtk.Box):
     def __init__(self, vm_name, vm_manager, notification_manager=None, error_handler=None):
