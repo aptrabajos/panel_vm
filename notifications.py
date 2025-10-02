@@ -110,34 +110,93 @@ class NotificationManager:
 
 class ErrorHandler:
     """Manejador centralizado de errores para el panel de VMs"""
-    
+
     def __init__(self, notification_manager):
         self.notification_manager = notification_manager
-    
-    def handle_vm_operation_error(self, vm_name, operation, error_message):
-        """Maneja errores específicos de operaciones de VM"""
-        error_messages = {
-            'start': f"No se pudo iniciar la VM {vm_name}",
-            'shutdown': f"No se pudo apagar la VM {vm_name}",
-            'reboot': f"No se pudo reiniciar la VM {vm_name}",
-            'destroy': f"No se pudo forzar el apagado de la VM {vm_name}",
-            'save': f"No se pudo guardar el estado de la VM {vm_name}",
-            'restore': f"No se pudo restaurar la VM {vm_name}"
+
+    def handle_vm_operation_error(self, vm_name, operation, error_info):
+        """Maneja errores específicos de operaciones de VM
+
+        Args:
+            vm_name: Nombre de la VM
+            operation: Tipo de operación (start, shutdown, etc)
+            error_info: Dict con 'type', 'message', 'suggestion' o string simple
+        """
+        # Compatibilidad con mensajes string simples
+        if isinstance(error_info, str):
+            error_info = {
+                "type": "unknown",
+                "message": error_info,
+                "suggestion": ""
+            }
+
+        error_type = error_info.get("type", "unknown")
+        message = error_info.get("message", "Error desconocido")
+        suggestion = error_info.get("suggestion", "")
+
+        # Mapeo de operaciones a verbos en español
+        operation_names = {
+            'start': 'iniciar',
+            'shutdown': 'apagar',
+            'reboot': 'reiniciar',
+            'destroy': 'forzar el apagado de',
+            'save': 'guardar el estado de',
+            'restore': 'restaurar'
         }
-        
-        user_message = error_messages.get(operation, f"Error en operación '{operation}' para {vm_name}")
-        
-        # Analizar el error para dar mensajes más específicos
-        if "not found" in error_message.lower():
-            user_message += " - VM no encontrada"
-        elif "permission denied" in error_message.lower():
-            user_message += " - Permisos insuficientes"
-        elif "already running" in error_message.lower():
-            user_message += " - La VM ya está en ejecución"
-        elif "not running" in error_message.lower():
-            user_message += " - La VM no está en ejecución"
-        
-        self.notification_manager.show_error(user_message, error_message)
+
+        operation_verb = operation_names.get(operation, operation)
+
+        # Construir mensaje completo según el tipo de error
+        if error_type == "not_found":
+            full_message = f"{message}"
+            if suggestion:
+                full_message += f"\n💡 {suggestion}"
+
+        elif error_type == "permission":
+            full_message = f"No se pudo {operation_verb} '{vm_name}': {message}"
+            if suggestion:
+                full_message += f"\n💡 {suggestion}"
+
+        elif error_type == "connection":
+            full_message = f"Error de conexión: {message}"
+            if suggestion:
+                full_message += f"\n💡 {suggestion}"
+
+        elif error_type == "already_running":
+            full_message = f"{message}"
+            # No mostrar como error, sino como advertencia
+            self.notification_manager.show_warning(full_message)
+            return
+
+        elif error_type == "not_running":
+            full_message = f"{message}"
+            if suggestion:
+                full_message += f"\n💡 {suggestion}"
+            # Mostrar como advertencia en vez de error
+            self.notification_manager.show_warning(full_message)
+            return
+
+        elif error_type == "network":
+            full_message = f"Error de red al {operation_verb} '{vm_name}': {message}"
+            if suggestion:
+                full_message += f"\n💡 {suggestion}"
+
+        elif error_type == "resources":
+            full_message = f"Recursos insuficientes para {operation_verb} '{vm_name}': {message}"
+            if suggestion:
+                full_message += f"\n💡 {suggestion}"
+
+        else:
+            # Error genérico
+            full_message = f"No se pudo {operation_verb} '{vm_name}'"
+            if message and message != "Error desconocido":
+                full_message += f": {message}"
+            if suggestion:
+                full_message += f"\n💡 {suggestion}"
+
+        # Mostrar error con logging detallado
+        logger.error(f"[{error_type.upper()}] {operation} en {vm_name}: {message}")
+        self.notification_manager.show_error(full_message)
     
     def handle_connection_error(self, error_message):
         """Maneja errores de conexión con libvirt"""
