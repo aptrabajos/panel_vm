@@ -20,6 +20,10 @@ class VMCard(Gtk.Box):
         self.notification_manager = notification_manager
         self.error_handler = error_handler
         self.is_updating = False
+
+        # Historial para gráficos
+        self.cpu_history = deque(maxlen=30)
+        self.memory_history = deque(maxlen=30)
         
         self.set_margin_top(12)
         self.set_margin_bottom(12)
