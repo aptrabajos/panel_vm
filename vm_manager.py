@@ -479,6 +479,10 @@ class VMManager:
                     stats['block_read_reqs'] += int(value)
                 elif key.startswith('block.') and '.wr.reqs' in key:
                     stats['block_write_reqs'] += int(value)
+                elif key.startswith('block.') and '.rd.times' in key:
+                    stats['block_rd_total_times'] += int(value)
+                elif key.startswith('block.') and '.wr.times' in key:
+                    stats['block_wr_total_times'] += int(value)
 
                 # Estadísticas de red
                 elif key.startswith('net.') and '.rx.bytes' in key:
@@ -489,6 +493,10 @@ class VMManager:
                     stats['net_rx_pkts'] += int(value)
                 elif key.startswith('net.') and '.tx.pkts' in key:
                     stats['net_tx_pkts'] += int(value)
+                elif key.startswith('net.') and '.rx.drop' in key:
+                    stats['net_rx_drop'] += int(value)
+                elif key.startswith('net.') and '.tx.drop' in key:
+                    stats['net_tx_drop'] += int(value)
 
             return stats
         except Exception as e:
