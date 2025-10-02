@@ -96,12 +96,12 @@ class VMCard(Gtk.Box):
         graphs_row.set_halign(Gtk.Align.CENTER)
 
         # Gráfico circular de CPU
-        self.cpu_circular = CircularProgressWidget(size=100)
+        self.cpu_circular = CircularProgressWidget(size=140)
         self.cpu_circular.set_value(0, "0%", "CPU")
         graphs_row.append(self.cpu_circular)
 
         # Gráfico circular de Memoria
-        self.memory_circular = CircularProgressWidget(size=100)
+        self.memory_circular = CircularProgressWidget(size=140)
         self.memory_circular.set_value(0, "0 GB", "RAM Asignada")
         graphs_row.append(self.memory_circular)
 
