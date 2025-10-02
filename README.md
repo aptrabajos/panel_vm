@@ -98,7 +98,18 @@ Después de la instalación, puedes ejecutar la aplicación de varias formas:
 #### Monitoreo
 
 - **Estado en tiempo real**: El estado de las VMs se actualiza automáticamente
-- **Información de recursos**: Muestra tiempo de CPU y uso de memoria para VMs en ejecución
+- **Información básica**:
+  - Dirección IP de la VM
+  - Tiempo de CPU
+  - Uso de memoria
+- **Detalles avanzados** (expandible):
+  - **CPUs virtuales**: Número de vCPUs activas vs totales
+  - **Memoria**: Barra de progreso con porcentaje y valores en MB
+    - Verde (<70%): Uso bajo
+    - Amarillo (70-85%): Uso medio
+    - Rojo (>85%): Uso alto
+  - **Disco**: Total de bytes leídos y escritos desde el inicio de la VM
+  - **Red**: Total de datos recibidos y enviados
 - **Indicadores visuales**: Colores y iconos para identificar rápidamente el estado
 
 #### Notificaciones
