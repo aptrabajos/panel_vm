@@ -375,10 +375,10 @@ class VMCard(Gtk.Box):
             mem_label = f"{mem_gb:.1f} GB"
 
         # Actualizar gráficos circulares
-        self.cpu_circular.set_value(cpu_percent)
+        self.cpu_circular.set_value(cpu_percent, f"{cpu_percent:.1f}%", "CPU")
         self.memory_circular.set_value(
             mem_percent,
-            mem_label,
+            f"{mem_percent:.1f}%",
             "RAM" if mem_usage_info and 'rss' in mem_usage_info else "RAM Asignada"
         )
 
