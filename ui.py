@@ -173,16 +173,29 @@ class VMCard(Gtk.Box):
 
         # === Red ===
         net_label = Gtk.Label()
-        net_label.set_markup('<span weight="bold">Red</span>')
+        net_label.set_markup('<span weight="bold">Red (tiempo real)</span>')
         net_label.set_halign(Gtk.Align.START)
+        details_box.append(net_label)
+
+        # Mini gráfico de red RX (bajada)
+        self.net_rx_chart = MiniLineChartWidget(width=280, height=70)
+        self.net_rx_chart.set_title("⬇️ Descarga (MB/s)")
+        self.net_rx_chart.set_color(0.26, 0.80, 0.41)  # Verde
+        details_box.append(self.net_rx_chart)
+
+        # Mini gráfico de red TX (subida)
+        self.net_tx_chart = MiniLineChartWidget(width=280, height=70)
+        self.net_tx_chart.set_title("⬆️ Subida (MB/s)")
+        self.net_tx_chart.set_color(0.96, 0.61, 0.07)  # Naranja
+        details_box.append(self.net_tx_chart)
+
+        # Labels con acumulado total
         self.net_rx_label = Gtk.Label()
         self.net_tx_label = Gtk.Label()
         self.net_rx_label.set_css_classes(['caption'])
         self.net_tx_label.set_css_classes(['caption'])
         self.net_rx_label.set_halign(Gtk.Align.START)
         self.net_tx_label.set_halign(Gtk.Align.START)
-
-        details_box.append(net_label)
         details_box.append(self.net_rx_label)
         details_box.append(self.net_tx_label)
 
