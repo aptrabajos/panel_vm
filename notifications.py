@@ -59,16 +59,17 @@ class NotificationManager:
         # Intentar mostrar notificación del sistema con mensaje completo
         self._send_system_notification("VM Panel - Error", message, "dialog-error")
     
-    def show_warning(self, message, timeout=4):
+    def show_warning(self, message, timeout=5):
         """Muestra una notificación de advertencia"""
         if self.toast_overlay:
-            toast = Adw.Toast.new(f"Advertencia: {message}")
+            display_message = message.split('\n')[0] if '\n' in message else message
+            toast = Adw.Toast.new(f"⚠️ {display_message}")
             toast.set_timeout(timeout)
             self.toast_overlay.add_toast(toast)
-        
+
         logger.warning(f"Advertencia: {message}")
-        
-        # Intentar mostrar notificación del sistema
+
+        # Intentar mostrar notificación del sistema con mensaje completo
         self._send_system_notification("VM Panel - Advertencia", message, "dialog-warning")
     
     def show_info(self, message, timeout=3):
