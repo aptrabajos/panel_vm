@@ -169,3 +169,70 @@ button:focus {
     min-width: 60px;
     font-size: 12px;
 }
+
+/* Estilos para barras de progreso de memoria */
+.memory-bar {
+    min-height: 24px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.memory-bar trough {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    min-height: 24px;
+}
+
+.memory-bar progress {
+    border-radius: 6px;
+    background: linear-gradient(90deg, @accent_color, #1c71d8);
+}
+
+/* Colores según nivel de uso */
+.memory-bar.level-low progress {
+    background: linear-gradient(90deg, @success_color, #2ec27e);
+}
+
+.memory-bar.level-medium progress {
+    background: linear-gradient(90deg, @warning_color, #f5c211);
+}
+
+.memory-bar.level-high progress {
+    background: linear-gradient(90deg, @destructive_color, #e01b24);
+}
+
+/* Estilos para el expander de detalles */
+expander {
+    margin: 8px 0;
+}
+
+expander title {
+    font-weight: 500;
+    color: @accent_color;
+}
+
+expander title:hover {
+    color: @accent_bg_color;
+}
+
+/* Mejoras visuales para métricas */
+.metric-label {
+    font-size: 13px;
+    padding: 4px 0;
+}
+
+.metric-value {
+    font-weight: 600;
+    color: @accent_color;
+}
+
+/* Separadores dentro de detalles */
+expander separator {
+    background: rgba(0, 0, 0, 0.08);
+    margin: 12px 0;
+}
+
+/* Animación suave para el expander */
+expander > box {
+    transition: all 200ms ease;
+}
