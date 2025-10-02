@@ -288,19 +288,19 @@ class VMCard(Gtk.Box):
                     else:
                         self.cpu_label.set_text(f"⚙️ CPU: {vcpu_current} vCPUs activas")
 
-                    # Memoria básica con RSS real
+                    # Memoria básica con balloon driver
                     mem_usage_info = self.vm_manager.get_vm_memory_usage(self.vm_name)
                     mem_actual = detailed_stats.get('memory_actual')
                     mem_available = detailed_stats.get('memory_available')
 
-                    if mem_usage_info and 'rss' in mem_usage_info and mem_available:
-                        # Usar RSS para mostrar uso real
-                        rss_kb = mem_usage_info['rss']
-                        mem_gb_used = rss_kb / (1024 * 1024)
-                        mem_percent = (rss_kb / mem_available) * 100
-                        # Limitar al 100% para display
-                        mem_percent_display = min(100, mem_percent)
-                        self.memory_label.set_text(f"💾 Memoria: {mem_gb_used:.1f} GB ({mem_percent_display:.0f}%)")
+                    if mem_usage_info and 'actual' in mem_usage_info and 'unused' in mem_usage_info:
+                        # Usar balloon stats para mostrar uso real dentro del guest
+                        actual_kb = mem_usage_info['actual']
+                        unused_kb = mem_usage_info['unused']
+                        used_kb = actual_kb - unused_kb
+                        mem_gb_used = used_kb / (1024 * 1024)
+                        mem_percent = (used_kb / actual_kb) * 100
+                        self.memory_label.set_text(f"💾 Memoria: {mem_gb_used:.1f} GB ({mem_percent:.0f}%)")
                     elif mem_actual and mem_available:
                         # Fallback: memoria asignada
                         mem_actual_gb = mem_actual / (1024 * 1024)
