@@ -137,6 +137,7 @@ panel_vm/
 
 La aplicación utiliza los siguientes comandos de `virsh` internamente:
 
+**Comandos de control:**
 - `virsh list --all` - Listar todas las VMs
 - `virsh start <vm>` - Iniciar VM
 - `virsh shutdown <vm>` - Apagar VM gracefully
@@ -144,6 +145,13 @@ La aplicación utiliza los siguientes comandos de `virsh` internamente:
 - `virsh reboot <vm>` - Reiniciar VM
 - `virsh managedsave <vm>` - Pausar/guardar estado
 - `virsh managedsave-remove <vm>` - Eliminar estado guardado
+
+**Comandos de monitoreo:**
+- `virsh dominfo <vm>` - Información básica de la VM
+- `virsh domifaddr <vm>` - Obtener dirección IP
+- `virsh domstats --vcpu --memory --block --interface <vm>` - Estadísticas detalladas
+- `virsh vcpuinfo <vm>` - Información de CPUs virtuales
+- `virsh cpu-stats <vm>` - Estadísticas de CPU
 
 ## Solución de Problemas
 
