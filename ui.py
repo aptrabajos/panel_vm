@@ -306,6 +306,18 @@ class VMCard(Gtk.Box):
                 else:
                     self.ip_label.set_text("🌐 IP: Obteniendo...")
 
+                # Obtener uptime
+                uptime_seconds = self.vm_manager.get_vm_uptime(self.vm_name)
+                if uptime_seconds:
+                    hours = uptime_seconds // 3600
+                    minutes = (uptime_seconds % 3600) // 60
+                    if hours > 0:
+                        self.uptime_label.set_text(f"⏰ Uptime: {hours}h {minutes}m")
+                    else:
+                        self.uptime_label.set_text(f"⏰ Uptime: {minutes}m")
+                else:
+                    self.uptime_label.set_text("⏰ Uptime: N/A")
+
                 # Obtener estadísticas detalladas una sola vez
                 detailed_stats = self.vm_manager.get_vm_detailed_stats(self.vm_name)
                 if detailed_stats:
