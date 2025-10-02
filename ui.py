@@ -82,16 +82,20 @@ class VMCard(Gtk.Box):
         self.cpu_label = Gtk.Label()
         self.memory_label = Gtk.Label()
         self.ip_label = Gtk.Label()
+        self.uptime_label = Gtk.Label()
         self.cpu_label.set_css_classes(['caption'])
         self.memory_label.set_css_classes(['caption'])
         self.ip_label.set_css_classes(['caption'])
+        self.uptime_label.set_css_classes(['caption'])
         self.cpu_label.set_halign(Gtk.Align.START)
         self.memory_label.set_halign(Gtk.Align.START)
         self.ip_label.set_halign(Gtk.Align.START)
+        self.uptime_label.set_halign(Gtk.Align.START)
 
         self.info_box.append(self.cpu_label)
         self.info_box.append(self.memory_label)
         self.info_box.append(self.ip_label)
+        self.info_box.append(self.uptime_label)
 
         # Expander para detalles avanzados
         self.details_expander = Gtk.Expander()
