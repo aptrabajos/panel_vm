@@ -175,28 +175,47 @@ class VMCard(Gtk.Box):
         """Ejecuta una acción de VM en un hilo separado"""
         def run_action():
             GLib.idle_add(self.set_loading, True)
-            
+
             try:
-                success = action_func(self.vm_name)
-                time.sleep(1)  # Pequeña pausa para que se vea la operación
-                
+                # Llamar a la función de VM (ahora retorna tupla)
+                result = action_func(self.vm_name)
+
+                # Compatibilidad: algunas funciones pueden retornar solo bool
+                if isinstance(result, tuple):
+                    success, error_info = result
+                else:
+                    success = result
+                    error_info = None
+
+                time.sleep(0.5)  # Pequeña pausa para que se vea la operación
+
                 GLib.idle_add(self.set_loading, False)
                 GLib.idle_add(self.update_vm_status)
-                
+
                 if success:
                     if self.notification_manager:
-                        GLib.idle_add(self.notification_manager.show_success, 
-                                    f"{success_message} para {self.vm_name}")
+                        GLib.idle_add(self.notification_manager.show_success,
+                                    f"{success_message}")
                 else:
-                    if self.error_handler:
+                    if self.error_handler and error_info:
+                        GLib.idle_add(self.error_handler.handle_vm_operation_error,
+                                    self.vm_name, operation_name, error_info)
+                    elif self.error_handler:
+                        # Fallback para errores sin info detallada
                         GLib.idle_add(self.error_handler.handle_vm_operation_error,
                                     self.vm_name, operation_name, "Operación falló")
+
             except Exception as e:
                 GLib.idle_add(self.set_loading, False)
                 if self.error_handler:
+                    error_info = {
+                        "type": "exception",
+                        "message": f"Error inesperado: {str(e)}",
+                        "suggestion": "Revisa los logs para más información"
+                    }
                     GLib.idle_add(self.error_handler.handle_vm_operation_error,
-                                self.vm_name, operation_name, str(e))
-        
+                                self.vm_name, operation_name, error_info)
+
         thread = threading.Thread(target=run_action)
         thread.daemon = True
         thread.start()
