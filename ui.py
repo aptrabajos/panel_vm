@@ -202,11 +202,11 @@ class VMCard(Gtk.Box):
         """Actualiza el estado de la VM"""
         vms = self.vm_manager.list_all_vms()
         vm_info = next((vm for vm in vms if vm['name'] == self.vm_name), None)
-        
+
         if vm_info:
             state = vm_info['state']
             running = vm_info['running']
-            
+
             # Actualizar label de estado
             if running:
                 self.status_label.set_markup('<span color="#26a269">● En ejecución</span>')
@@ -226,21 +226,100 @@ class VMCard(Gtk.Box):
                 self.shutdown_btn.set_visible(False)
                 self.reboot_btn.set_visible(False)
                 self.save_btn.set_visible(False)
-            
+
             # Obtener estadísticas si está corriendo
             if running:
+                # Obtener IP
+                ip = self.vm_manager.get_vm_ip_address(self.vm_name)
+                if ip:
+                    self.ip_label.set_markup(f'<span>🌐 IP: <b>{ip}</b></span>')
+                else:
+                    self.ip_label.set_text("🌐 IP: Obteniendo...")
+
+                # Estadísticas básicas
                 stats = self.vm_manager.get_vm_stats(self.vm_name)
                 if stats:
                     cpu_time = stats.get('cpu_time', 'N/A')
                     memory_used = stats.get('memory_used', 'N/A')
-                    self.cpu_label.set_text(f"CPU Time: {cpu_time}")
-                    self.memory_label.set_text(f"Memoria: {memory_used} KB")
+                    self.cpu_label.set_text(f"⚙️ CPU Time: {cpu_time}s")
+                    self.memory_label.set_text(f"💾 Memoria: {memory_used} KB")
                 else:
-                    self.cpu_label.set_text("CPU: Información no disponible")
-                    self.memory_label.set_text("Memoria: Información no disponible")
+                    self.cpu_label.set_text("⚙️ CPU: Información no disponible")
+                    self.memory_label.set_text("💾 Memoria: Información no disponible")
+
+                # Estadísticas detalladas
+                detailed_stats = self.vm_manager.get_vm_detailed_stats(self.vm_name)
+                if detailed_stats:
+                    self._update_detailed_stats(detailed_stats)
+                else:
+                    self._clear_detailed_stats()
+
+                self.details_expander.set_visible(True)
             else:
-                self.cpu_label.set_text("CPU: VM apagada")
-                self.memory_label.set_text("Memoria: VM apagada")
+                self.cpu_label.set_text("⚙️ CPU: VM apagada")
+                self.memory_label.set_text("💾 Memoria: VM apagada")
+                self.ip_label.set_text("🌐 IP: N/A")
+                self._clear_detailed_stats()
+                self.details_expander.set_visible(False)
+
+    def _update_detailed_stats(self, stats):
+        """Actualiza las estadísticas detalladas"""
+        # vCPUs
+        vcpu_count = stats.get('vcpu_count', 'N/A')
+        vcpu_current = stats.get('vcpu_current', 'N/A')
+        self.vcpu_info_label.set_text(f"Activas: {vcpu_current} / {vcpu_count}")
+
+        # Memoria
+        mem_actual = stats.get('memory_actual')
+        mem_available = stats.get('memory_available')
+        if mem_actual and mem_available:
+            mem_percent = (mem_actual / mem_available) * 100
+            self.memory_bar.set_fraction(mem_actual / mem_available)
+            self.memory_bar.set_text(f"{mem_percent:.1f}%")
+
+            # Colorear según uso
+            if mem_percent < 70:
+                self.memory_bar.set_css_classes(['memory-bar', 'level-low'])
+            elif mem_percent < 85:
+                self.memory_bar.set_css_classes(['memory-bar', 'level-medium'])
+            else:
+                self.memory_bar.set_css_classes(['memory-bar', 'level-high'])
+
+            mem_actual_mb = mem_actual / 1024
+            mem_available_mb = mem_available / 1024
+            self.memory_detail_label.set_text(f"{mem_actual_mb:.1f} MB / {mem_available_mb:.1f} MB")
+        else:
+            self.memory_bar.set_fraction(0)
+            self.memory_bar.set_text("N/A")
+            self.memory_detail_label.set_text("No disponible")
+
+        # Disco
+        read_bytes = stats.get('block_read_bytes', 0)
+        write_bytes = stats.get('block_write_bytes', 0)
+        read_mb = read_bytes / (1024 * 1024)
+        write_mb = write_bytes / (1024 * 1024)
+        self.disk_read_label.set_text(f"📖 Lectura: {read_mb:.2f} MB")
+        self.disk_write_label.set_text(f"✏️ Escritura: {write_mb:.2f} MB")
+
+        # Red
+        rx_bytes = stats.get('net_rx_bytes', 0)
+        tx_bytes = stats.get('net_tx_bytes', 0)
+        rx_mb = rx_bytes / (1024 * 1024)
+        tx_mb = tx_bytes / (1024 * 1024)
+        self.net_rx_label.set_text(f"⬇️ Recibido: {rx_mb:.2f} MB")
+        self.net_tx_label.set_text(f"⬆️ Enviado: {tx_mb:.2f} MB")
+
+    def _clear_detailed_stats(self):
+        """Limpia las estadísticas detalladas"""
+        self.vcpu_info_label.set_text("N/A")
+        self.memory_bar.set_fraction(0)
+        self.memory_bar.set_text("0%")
+        self.memory_bar.set_css_classes(['memory-bar'])
+        self.memory_detail_label.set_text("VM apagada")
+        self.disk_read_label.set_text("📖 Lectura: N/A")
+        self.disk_write_label.set_text("✏️ Escritura: N/A")
+        self.net_rx_label.set_text("⬇️ Recibido: N/A")
+        self.net_tx_label.set_text("⬆️ Enviado: N/A")
     
     def execute_vm_action(self, action_func, success_message, operation_name):
         """Ejecuta una acción de VM en un hilo separado"""
