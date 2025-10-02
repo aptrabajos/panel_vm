@@ -418,6 +418,10 @@ class VMCard(Gtk.Box):
         # Limpiar historial
         self.cpu_history.clear()
         self.memory_history.clear()
+
+        # Resetear tracking de CPU
+        self.last_cpu_time = None
+        self.last_update_time = None
     
     def execute_vm_action(self, action_func, success_message, operation_name):
         """Ejecuta una acción de VM en un hilo separado"""
