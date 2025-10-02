@@ -48,10 +48,10 @@ class CircularProgressWidget(Gtk.DrawingArea):
 
     def _on_draw(self, area, ctx, width, height):
         """Dibuja el gráfico circular"""
-        # Centro y radio
+        # Centro y radio (desplazar círculo hacia abajo para dejar espacio al título)
         center_x = width / 2
-        center_y = height / 2
-        radius = min(width, height) / 2 - 10
+        center_y = (height + 30) / 2  # Desplazado hacia abajo
+        radius = (self.size / 2) - 10  # Usar self.size en lugar de height total
         line_width = 12
 
         # Fondo del círculo (gris claro)
