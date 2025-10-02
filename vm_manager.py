@@ -111,13 +111,14 @@ class VMManager:
     
     def list_all_vms(self) -> List[Dict]:
         """Lista todas las VMs con su estado"""
-        success, output = self._run_virsh_command(["list", "--all"])
+        success, stdout, stderr = self._run_virsh_command(["list", "--all"])
         if not success:
+            logger.error(f"Error listando VMs: {stderr}")
             return []
-        
+
         vms = []
-        lines = output.strip().split('\n')[2:]  # Saltear headers
-        
+        lines = stdout.strip().split('\n')[2:]  # Saltear headers
+
         for line in lines:
             if line.strip():
                 parts = line.split()
@@ -125,7 +126,7 @@ class VMManager:
                     vm_id = parts[0] if parts[0] != '-' else None
                     vm_name = parts[1]
                     vm_state = ' '.join(parts[2:])
-                    
+
                     if vm_name in self.vm_names:
                         # Detectar si está ejecutándose (español e inglés)
                         is_running = vm_state in ['running', 'ejecutando']
@@ -135,7 +136,7 @@ class VMManager:
                             'state': vm_state,
                             'running': is_running
                         })
-        
+
         return vms
     
     def get_vm_info(self, vm_name: str) -> Optional[Dict]:
