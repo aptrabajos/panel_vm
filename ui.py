@@ -24,6 +24,10 @@ class VMCard(Gtk.Box):
         # Historial para gráficos
         self.cpu_history = deque(maxlen=30)
         self.memory_history = deque(maxlen=30)
+
+        # Tracking para cálculo de CPU usage
+        self.last_cpu_time = None
+        self.last_update_time = None
         
         self.set_margin_top(12)
         self.set_margin_bottom(12)
