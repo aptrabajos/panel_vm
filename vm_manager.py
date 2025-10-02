@@ -361,9 +361,8 @@ class VMManager:
     def get_vm_detailed_stats(self, vm_name: str) -> Optional[Dict]:
         """Obtiene estadísticas detalladas de CPU, memoria, disco y red"""
         try:
-            success, stdout, stderr = self._run_virsh_command([
-                "domstats", "--vcpu", "--memory", "--block", "--interface", vm_name
-            ])
+            # Obtener todas las estadísticas disponibles (sin filtros)
+            success, stdout, stderr = self._run_virsh_command(["domstats", vm_name])
 
             if not success:
                 logger.debug(f"No se pudieron obtener stats detalladas de {vm_name}: {stderr}")
@@ -373,11 +372,18 @@ class VMManager:
                 'vcpu_count': None,
                 'vcpu_current': None,
                 'vcpu_time': None,
+                'cpu_time': None,
+                'cpu_user': None,
+                'cpu_system': None,
                 'memory_actual': None,
                 'memory_available': None,
                 'memory_unused': None,
                 'memory_usable': None,
                 'memory_rss': None,
+                'block_count': 0,
+                'block_capacity': 0,
+                'block_allocation': 0,
+                'block_physical': 0,
                 'block_read_bytes': 0,
                 'block_write_bytes': 0,
                 'block_read_reqs': 0,
@@ -398,8 +404,16 @@ class VMManager:
                 key = key.strip()
                 value = value.strip()
 
+                # Estadísticas de CPU
+                if key == 'cpu.time':
+                    stats['cpu_time'] = int(value)
+                elif key == 'cpu.user':
+                    stats['cpu_user'] = int(value)
+                elif key == 'cpu.system':
+                    stats['cpu_system'] = int(value)
+
                 # Estadísticas de vCPU
-                if key == 'vcpu.current':
+                elif key == 'vcpu.current':
                     stats['vcpu_current'] = int(value)
                 elif key == 'vcpu.maximum':
                     stats['vcpu_count'] = int(value)
@@ -422,6 +436,14 @@ class VMManager:
                     stats['memory_rss'] = int(value)
 
                 # Estadísticas de disco
+                elif key == 'block.count':
+                    stats['block_count'] = int(value)
+                elif key.startswith('block.') and '.capacity' in key:
+                    stats['block_capacity'] += int(value)
+                elif key.startswith('block.') and '.allocation' in key:
+                    stats['block_allocation'] += int(value)
+                elif key.startswith('block.') and '.physical' in key:
+                    stats['block_physical'] += int(value)
                 elif key.startswith('block.') and '.rd.bytes' in key:
                     stats['block_read_bytes'] += int(value)
                 elif key.startswith('block.') and '.wr.bytes' in key:
