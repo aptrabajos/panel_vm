@@ -386,15 +386,17 @@ class VMCard(Gtk.Box):
 
     def _clear_detailed_stats(self):
         """Limpia las estadísticas detalladas"""
-        self.vcpu_info_label.set_text("N/A")
-        self.memory_bar.set_fraction(0)
-        self.memory_bar.set_text("0%")
-        self.memory_bar.set_css_classes(['memory-bar'])
-        self.memory_detail_label.set_text("VM apagada")
-        self.disk_read_label.set_text("📖 Lectura: N/A")
-        self.disk_write_label.set_text("✏️ Escritura: N/A")
+        self.cpu_circular.set_value(0, "0%")
+        self.memory_circular.set_value(0, "0%")
+        self.vcpu_info_label.set_text("VM apagada")
+        self.disk_usage_bar.set_value(0, 0, 0)
+        self.disk_detail_label.set_text("VM apagada")
         self.net_rx_label.set_text("⬇️ Recibido: N/A")
         self.net_tx_label.set_text("⬆️ Enviado: N/A")
+
+        # Limpiar historial
+        self.cpu_history.clear()
+        self.memory_history.clear()
     
     def execute_vm_action(self, action_func, success_message, operation_name):
         """Ejecuta una acción de VM en un hilo separado"""
