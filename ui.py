@@ -347,23 +347,34 @@ class VMCard(Gtk.Box):
         self.last_cpu_time = cpu_time
         self.last_update_time = current_time
 
-        # Memoria: mostrar GB asignados en lugar de porcentaje
-        # (QEMU/KVM sin balloon driver no reporta uso real)
-        mem_gb = 0
-        if mem_actual:
-            mem_gb = mem_actual / (1024 * 1024)  # Convertir KB a GB
+        # Memoria: intentar obtener uso real desde RSS
+        mem_usage_info = self.vm_manager.get_vm_memory_usage(self.vm_name)
+        mem_percent = 0
+        mem_label = ""
 
-        # Actualizar gráfico circular de CPU con porcentaje dinámico
+        if mem_usage_info and 'rss' in mem_usage_info and mem_available:
+            # Tenemos RSS (uso real aproximado)
+            rss_kb = mem_usage_info['rss']
+            mem_percent = (rss_kb / mem_available) * 100
+            mem_gb_used = rss_kb / (1024 * 1024)
+            mem_label = f"{mem_gb_used:.1f} GB"
+        elif mem_actual and mem_available:
+            # Fallback: mostrar memoria asignada
+            mem_gb = mem_actual / (1024 * 1024)
+            mem_percent = 50  # Valor fijo visual
+            mem_label = f"{mem_gb:.1f} GB"
+
+        # Actualizar gráficos circulares
         self.cpu_circular.set_value(cpu_percent)
+        self.memory_circular.set_value(
+            mem_percent,
+            mem_label,
+            "RAM" if mem_usage_info and 'rss' in mem_usage_info else "RAM Asignada"
+        )
 
-        # Actualizar gráfico de memoria con cantidad asignada
-        # Mostrar como "lleno" visualmente al 50% para indicar asignación
-        self.memory_circular.set_value(50, f"{mem_gb:.1f} GB", "RAM Asignada")
-
-        # Agregar solo CPU al historial (memoria es estática)
+        # Agregar al historial
         self.cpu_line_chart.add_data_point(cpu_percent)
-        # Para memoria, usar un valor fijo del 50% en el gráfico de línea también
-        self.memory_line_chart.add_data_point(50 if mem_gb > 0 else 0)
+        self.memory_line_chart.add_data_point(mem_percent)
 
         # vCPUs con tiempo de CPU
         cpu_time = stats.get('cpu_time')
