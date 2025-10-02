@@ -291,29 +291,33 @@ class VMManager:
         """Obtiene estadísticas de CPU y memoria de una VM"""
         try:
             # Obtener estadísticas de CPU
-            success, cpu_output = self._run_virsh_command(["cpu-stats", vm_name])
-            
+            success, cpu_output, cpu_stderr = self._run_virsh_command(["cpu-stats", vm_name])
+
             # Obtener información de memoria
-            success2, mem_output = self._run_virsh_command(["domstats", "--memory", vm_name])
-            
+            success2, mem_output, mem_stderr = self._run_virsh_command(["domstats", "--memory", vm_name])
+
             stats = {
                 'cpu_time': None,
                 'memory_used': None,
                 'memory_total': None
             }
-            
+
             if success and cpu_output:
                 for line in cpu_output.split('\n'):
                     if 'cpu_time' in line:
                         stats['cpu_time'] = line.split()[1]
-            
+            else:
+                logger.debug(f"No se pudieron obtener stats de CPU para {vm_name}: {cpu_stderr}")
+
             if success2 and mem_output:
                 for line in mem_output.split('\n'):
                     if 'balloon.current' in line:
                         stats['memory_used'] = line.split('=')[1]
                     elif 'balloon.maximum' in line:
                         stats['memory_total'] = line.split('=')[1]
-            
+            else:
+                logger.debug(f"No se pudieron obtener stats de memoria para {vm_name}: {mem_stderr}")
+
             return stats
         except Exception as e:
             logger.error(f"Error obteniendo estadísticas de {vm_name}: {e}")
