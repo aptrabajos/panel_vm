@@ -549,16 +549,25 @@ class VMCard(Gtk.Box):
         self.vcpu_info_label.set_text("VM apagada")
         self.disk_usage_bar.set_value(0, 0, 0)
         self.disk_detail_label.set_text("VM apagada")
+        self.disk_iops_label.set_text("")
+        self.disk_latency_label.set_text("")
         self.net_rx_label.set_text("⬇️ Recibido: N/A")
         self.net_tx_label.set_text("⬆️ Enviado: N/A")
+        self.uptime_label.set_text("⏰ Uptime: N/A")
 
         # Limpiar historial
         self.cpu_history.clear()
         self.memory_history.clear()
+        self.net_rx_history.clear()
+        self.net_tx_history.clear()
 
-        # Resetear tracking de CPU
+        # Resetear tracking
         self.last_cpu_time = None
         self.last_update_time = None
+        self.last_net_rx_bytes = None
+        self.last_net_tx_bytes = None
+        self.last_block_read_reqs = None
+        self.last_block_write_reqs = None
     
     def execute_vm_action(self, action_func, success_message, operation_name):
         """Ejecuta una acción de VM en un hilo separado"""
