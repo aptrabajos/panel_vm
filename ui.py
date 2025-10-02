@@ -236,13 +236,32 @@ class VMCard(Gtk.Box):
                 else:
                     self.ip_label.set_text("🌐 IP: Obteniendo...")
 
-                # Estadísticas básicas
-                stats = self.vm_manager.get_vm_stats(self.vm_name)
-                if stats:
-                    cpu_time = stats.get('cpu_time', 'N/A')
-                    memory_used = stats.get('memory_used', 'N/A')
-                    self.cpu_label.set_text(f"⚙️ CPU Time: {cpu_time}s")
-                    self.memory_label.set_text(f"💾 Memoria: {memory_used} KB")
+                # Estadísticas básicas mejoradas
+                detailed_stats = self.vm_manager.get_vm_detailed_stats(self.vm_name)
+                if detailed_stats:
+                    # CPU
+                    cpu_time = detailed_stats.get('cpu_time')
+                    vcpu_current = detailed_stats.get('vcpu_current', 0)
+                    if cpu_time:
+                        cpu_seconds = cpu_time / 1_000_000_000
+                        cpu_hours = cpu_seconds / 3600
+                        if cpu_hours >= 1:
+                            self.cpu_label.set_text(f"⚙️ CPU: {vcpu_current} vCPUs | {cpu_hours:.1f}h")
+                        else:
+                            cpu_minutes = cpu_seconds / 60
+                            self.cpu_label.set_text(f"⚙️ CPU: {vcpu_current} vCPUs | {cpu_minutes:.1f}m")
+                    else:
+                        self.cpu_label.set_text(f"⚙️ CPU: {vcpu_current} vCPUs activas")
+
+                    # Memoria
+                    mem_actual = detailed_stats.get('memory_actual')
+                    mem_available = detailed_stats.get('memory_available')
+                    if mem_actual and mem_available:
+                        mem_actual_gb = mem_actual / (1024 * 1024)
+                        mem_percent = (mem_actual / mem_available) * 100
+                        self.memory_label.set_text(f"💾 Memoria: {mem_actual_gb:.1f} GB ({mem_percent:.0f}%)")
+                    else:
+                        self.memory_label.set_text("💾 Memoria: N/A")
                 else:
                     self.cpu_label.set_text("⚙️ CPU: Información no disponible")
                     self.memory_label.set_text("💾 Memoria: Información no disponible")
