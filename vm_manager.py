@@ -411,10 +411,14 @@ class VMManager:
                 'block_write_bytes': 0,
                 'block_read_reqs': 0,
                 'block_write_reqs': 0,
+                'block_rd_total_times': 0,  # Para calcular latencia
+                'block_wr_total_times': 0,  # Para calcular latencia
                 'net_rx_bytes': 0,
                 'net_tx_bytes': 0,
                 'net_rx_pkts': 0,
                 'net_tx_pkts': 0,
+                'net_rx_drop': 0,
+                'net_tx_drop': 0,
             }
 
             # Parsear la salida
