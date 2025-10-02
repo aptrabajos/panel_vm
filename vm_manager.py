@@ -1,40 +1,113 @@
 import subprocess
 import json
 import xml.etree.ElementTree as ET
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+class VMError(Exception):
+    """Excepción base para errores de VM"""
+    def __init__(self, message: str, error_type: str = "unknown", details: str = ""):
+        self.message = message
+        self.error_type = error_type
+        self.details = details
+        super().__init__(self.message)
+
 class VMManager:
     def __init__(self):
         self.connection_uri = "qemu:///system"
         self.vm_names = ["manjaro1", "manjaro2"]
+        self.system_ready = False
+        self.system_error = None
         self._check_system_requirements()
-    
-    def _run_virsh_command(self, args: List[str]) -> tuple[bool, str]:
-        """Ejecuta un comando virsh y retorna el resultado"""
+
+    def _run_virsh_command(self, args: List[str]) -> Tuple[bool, str, str]:
+        """Ejecuta un comando virsh y retorna (éxito, stdout, stderr)"""
         try:
             # Intentar primero sin sudo
             cmd = ["virsh", "-c", self.connection_uri] + args
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-            
-            # Si falla, intentar con sudo usando NOPASSWD o pkexec
+
+            # Si falla, intentar con pkexec para GUI
             if result.returncode != 0:
-                # Intentar con pkexec para GUI
-                cmd = ["pkexec", "virsh", "-c", self.connection_uri] + args
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-            
+                stderr_lower = result.stderr.lower()
+
+                # Si es error de permisos, intentar con pkexec
+                if "permission" in stderr_lower or "access denied" in stderr_lower:
+                    cmd = ["pkexec", "virsh", "-c", self.connection_uri] + args
+                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+
             success = result.returncode == 0
-            output = result.stdout if success else result.stderr
-            return success, output
+            return success, result.stdout, result.stderr
+
         except subprocess.TimeoutExpired:
-            logger.error("Comando virsh expiró")
-            return False, "Comando expiró"
+            error_msg = f"Comando '{' '.join(args)}' excedió el tiempo de espera"
+            logger.error(error_msg)
+            return False, "", error_msg
+        except FileNotFoundError:
+            error_msg = "virsh no está instalado o no se encuentra en el PATH"
+            logger.error(error_msg)
+            return False, "", error_msg
         except Exception as e:
-            logger.error(f"Error ejecutando comando virsh: {e}")
-            return False, str(e)
+            error_msg = f"Error inesperado ejecutando virsh: {str(e)}"
+            logger.error(error_msg)
+            return False, "", error_msg
+
+    def _parse_virsh_error(self, stderr: str, operation: str) -> Dict[str, str]:
+        """Analiza el error de virsh y retorna información estructurada"""
+        stderr_lower = stderr.lower()
+
+        error_info = {
+            "type": "unknown",
+            "message": stderr.strip(),
+            "suggestion": ""
+        }
+
+        # Errores de conexión
+        if "failed to connect" in stderr_lower or "connection refused" in stderr_lower:
+            error_info["type"] = "connection"
+            error_info["message"] = "No se pudo conectar al servicio de virtualización"
+            error_info["suggestion"] = "Ejecuta: sudo systemctl start libvirtd"
+
+        # Errores de permisos
+        elif "permission denied" in stderr_lower or "access denied" in stderr_lower:
+            error_info["type"] = "permission"
+            error_info["message"] = "Permisos insuficientes para la operación"
+            error_info["suggestion"] = "Ejecuta: sudo usermod -a -G libvirt $USER y reinicia sesión"
+
+        # VM no encontrada
+        elif "domain not found" in stderr_lower or "failed to get domain" in stderr_lower:
+            error_info["type"] = "not_found"
+            error_info["message"] = "La máquina virtual no existe"
+            error_info["suggestion"] = "Verifica el nombre de la VM con: virsh list --all"
+
+        # VM ya está corriendo
+        elif "already active" in stderr_lower or "is already active" in stderr_lower:
+            error_info["type"] = "already_running"
+            error_info["message"] = "La VM ya está en ejecución"
+            error_info["suggestion"] = ""
+
+        # VM no está corriendo
+        elif "domain is not running" in stderr_lower or "not running" in stderr_lower:
+            error_info["type"] = "not_running"
+            error_info["message"] = "La VM no está en ejecución"
+            error_info["suggestion"] = "Inicia la VM primero"
+
+        # Error de red
+        elif "network" in stderr_lower and "error" in stderr_lower:
+            error_info["type"] = "network"
+            error_info["message"] = "Error de configuración de red"
+            error_info["suggestion"] = "Verifica la configuración de red de la VM"
+
+        # Recursos insuficientes
+        elif "no space" in stderr_lower or "out of memory" in stderr_lower:
+            error_info["type"] = "resources"
+            error_info["message"] = "Recursos insuficientes del sistema"
+            error_info["suggestion"] = "Libera espacio en disco o memoria RAM"
+
+        return error_info
     
     def list_all_vms(self) -> List[Dict]:
         """Lista todas las VMs con su estado"""
