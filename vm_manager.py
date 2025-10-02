@@ -358,6 +358,29 @@ class VMManager:
             logger.error(f"Error obteniendo IP de {vm_name}: {e}")
             return None
 
+    def get_vm_memory_usage(self, vm_name: str) -> Optional[Dict]:
+        """Obtiene uso real de memoria desde RSS (Resident Set Size)"""
+        try:
+            success, stdout, stderr = self._run_virsh_command(["dommemstat", vm_name])
+
+            if not success:
+                logger.debug(f"No se pudo obtener dommemstat de {vm_name}: {stderr}")
+                return None
+
+            memory_info = {}
+            for line in stdout.strip().split('\n'):
+                if line.strip():
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        key = parts[0]
+                        value = parts[1]
+                        memory_info[key] = int(value)
+
+            return memory_info
+        except Exception as e:
+            logger.error(f"Error obteniendo memory usage de {vm_name}: {e}")
+            return None
+
     def get_vm_detailed_stats(self, vm_name: str) -> Optional[Dict]:
         """Obtiene estadísticas detalladas de CPU, memoria, disco y red"""
         try:
