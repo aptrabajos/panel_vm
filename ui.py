@@ -81,13 +81,50 @@ class VMCard(Gtk.Box):
 
         # Expander para detalles avanzados
         self.details_expander = Gtk.Expander()
-        self.details_expander.set_label("Ver detalles avanzados")
+        self.details_expander.set_label("📊 Ver detalles avanzados con gráficos")
 
         # Contenedor de detalles
-        details_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        details_box.set_margin_top(8)
+        details_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        details_box.set_margin_top(12)
 
-        # Sección de vCPUs
+        # === Gráficos Circulares (CPU y Memoria) ===
+        graphs_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+        graphs_row.set_halign(Gtk.Align.CENTER)
+
+        # Gráfico circular de CPU
+        self.cpu_circular = CircularProgressWidget(size=100)
+        self.cpu_circular.set_value(0, "0%", "CPU")
+        graphs_row.append(self.cpu_circular)
+
+        # Gráfico circular de Memoria
+        self.memory_circular = CircularProgressWidget(size=100)
+        self.memory_circular.set_value(0, "0%", "RAM")
+        graphs_row.append(self.memory_circular)
+
+        details_box.append(graphs_row)
+        details_box.append(Gtk.Separator())
+
+        # === Mini gráficos de línea (historial) ===
+        charts_label = Gtk.Label()
+        charts_label.set_markup('<span weight="bold">Historial (últimos 2.5 min)</span>')
+        charts_label.set_halign(Gtk.Align.START)
+        details_box.append(charts_label)
+
+        # Mini gráfico de CPU
+        self.cpu_line_chart = MiniLineChartWidget(width=280, height=70)
+        self.cpu_line_chart.set_title("CPU")
+        self.cpu_line_chart.set_color(0.26, 0.59, 0.98)  # Azul
+        details_box.append(self.cpu_line_chart)
+
+        # Mini gráfico de Memoria
+        self.memory_line_chart = MiniLineChartWidget(width=280, height=70)
+        self.memory_line_chart.set_title("Memoria")
+        self.memory_line_chart.set_color(0.61, 0.15, 0.69)  # Púrpura
+        details_box.append(self.memory_line_chart)
+
+        details_box.append(Gtk.Separator())
+
+        # === Información de vCPUs ===
         vcpu_label = Gtk.Label()
         vcpu_label.set_markup('<span weight="bold">CPUs Virtuales</span>')
         vcpu_label.set_halign(Gtk.Align.START)
@@ -95,28 +132,28 @@ class VMCard(Gtk.Box):
         self.vcpu_info_label.set_css_classes(['caption'])
         self.vcpu_info_label.set_halign(Gtk.Align.START)
 
-        # Barra de memoria
-        memory_header = Gtk.Label()
-        memory_header.set_markup('<span weight="bold">Memoria</span>')
-        memory_header.set_halign(Gtk.Align.START)
-        self.memory_bar = Gtk.ProgressBar()
-        self.memory_bar.set_show_text(True)
-        self.memory_detail_label = Gtk.Label()
-        self.memory_detail_label.set_css_classes(['caption'])
-        self.memory_detail_label.set_halign(Gtk.Align.START)
+        details_box.append(vcpu_label)
+        details_box.append(self.vcpu_info_label)
+        details_box.append(Gtk.Separator())
 
-        # Sección de disco
+        # === Disco con barra personalizada ===
         disk_label = Gtk.Label()
-        disk_label.set_markup('<span weight="bold">Disco</span>')
+        disk_label.set_markup('<span weight="bold">Almacenamiento</span>')
         disk_label.set_halign(Gtk.Align.START)
-        self.disk_read_label = Gtk.Label()
-        self.disk_write_label = Gtk.Label()
-        self.disk_read_label.set_css_classes(['caption'])
-        self.disk_write_label.set_css_classes(['caption'])
-        self.disk_read_label.set_halign(Gtk.Align.START)
-        self.disk_write_label.set_halign(Gtk.Align.START)
+        details_box.append(disk_label)
 
-        # Sección de red
+        self.disk_usage_bar = DiskUsageBarWidget(width=280, height=30)
+        self.disk_usage_bar.set_value(0, 0, 0)
+        details_box.append(self.disk_usage_bar)
+
+        self.disk_detail_label = Gtk.Label()
+        self.disk_detail_label.set_css_classes(['caption'])
+        self.disk_detail_label.set_halign(Gtk.Align.START)
+        details_box.append(self.disk_detail_label)
+
+        details_box.append(Gtk.Separator())
+
+        # === Red ===
         net_label = Gtk.Label()
         net_label.set_markup('<span weight="bold">Red</span>')
         net_label.set_halign(Gtk.Align.START)
@@ -127,18 +164,6 @@ class VMCard(Gtk.Box):
         self.net_rx_label.set_halign(Gtk.Align.START)
         self.net_tx_label.set_halign(Gtk.Align.START)
 
-        # Ensamblar detalles
-        details_box.append(vcpu_label)
-        details_box.append(self.vcpu_info_label)
-        details_box.append(Gtk.Separator())
-        details_box.append(memory_header)
-        details_box.append(self.memory_bar)
-        details_box.append(self.memory_detail_label)
-        details_box.append(Gtk.Separator())
-        details_box.append(disk_label)
-        details_box.append(self.disk_read_label)
-        details_box.append(self.disk_write_label)
-        details_box.append(Gtk.Separator())
         details_box.append(net_label)
         details_box.append(self.net_rx_label)
         details_box.append(self.net_tx_label)
