@@ -217,7 +217,231 @@ class VMCard(Gtk.Box):
         
         # Actualizar estado inicial
         self.update_vm_status()
-    
+
+    def _create_performance_tab(self):
+        """Crea el tab de rendimiento con gráficos de CPU, RAM y Red"""
+        perf_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        perf_box.set_margin_start(12)
+        perf_box.set_margin_end(12)
+        perf_box.set_margin_top(12)
+        perf_box.set_margin_bottom(12)
+
+        # Historial de gráficos
+        charts_label = Gtk.Label()
+        charts_label.set_markup('<span weight="bold" size="large">📈 Historial (últimos 2.5 min)</span>')
+        charts_label.set_halign(Gtk.Align.START)
+        perf_box.append(charts_label)
+        perf_box.append(Gtk.Separator())
+
+        # Gráficos de CPU y Memoria
+        self.cpu_line_chart = MiniLineChartWidget(width=280, height=70)
+        self.cpu_line_chart.set_title("CPU")
+        self.cpu_line_chart.set_color(0.26, 0.59, 0.98)  # Azul
+        perf_box.append(self.cpu_line_chart)
+
+        self.memory_line_chart = MiniLineChartWidget(width=280, height=70)
+        self.memory_line_chart.set_title("Memoria")
+        self.memory_line_chart.set_color(0.61, 0.15, 0.69)  # Púrpura
+        perf_box.append(self.memory_line_chart)
+
+        # vCPUs info
+        perf_box.append(Gtk.Separator())
+        vcpu_label = Gtk.Label()
+        vcpu_label.set_markup('<span weight="bold">⚙️ CPUs Virtuales</span>')
+        vcpu_label.set_halign(Gtk.Align.START)
+        self.vcpu_info_label = Gtk.Label()
+        self.vcpu_info_label.set_css_classes(['caption'])
+        self.vcpu_info_label.set_halign(Gtk.Align.START)
+        perf_box.append(vcpu_label)
+        perf_box.append(self.vcpu_info_label)
+
+        # Agregar como tab
+        tab_page = self.tab_view.append(perf_box)
+        tab_page.set_title("📈 Rendimiento")
+        tab_page.set_tooltip("CPU, Memoria y gráficos en tiempo real")
+
+    def _create_storage_tab(self):
+        """Crea el tab de almacenamiento con disco, IOPS y latencia"""
+        storage_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        storage_box.set_margin_start(12)
+        storage_box.set_margin_end(12)
+        storage_box.set_margin_top(12)
+        storage_box.set_margin_bottom(12)
+
+        # Título
+        disk_label = Gtk.Label()
+        disk_label.set_markup('<span weight="bold" size="large">💾 Almacenamiento</span>')
+        disk_label.set_halign(Gtk.Align.START)
+        storage_box.append(disk_label)
+        storage_box.append(Gtk.Separator())
+
+        # Barra de uso de disco
+        self.disk_usage_bar = DiskUsageBarWidget(width=280, height=30)
+        self.disk_usage_bar.set_value(0, 0, 0)
+        storage_box.append(self.disk_usage_bar)
+
+        # Detalles de disco
+        self.disk_detail_label = Gtk.Label()
+        self.disk_iops_label = Gtk.Label()
+        self.disk_latency_label = Gtk.Label()
+        self.disk_detail_label.set_css_classes(['caption'])
+        self.disk_iops_label.set_css_classes(['caption'])
+        self.disk_latency_label.set_css_classes(['caption'])
+        self.disk_detail_label.set_halign(Gtk.Align.START)
+        self.disk_iops_label.set_halign(Gtk.Align.START)
+        self.disk_latency_label.set_halign(Gtk.Align.START)
+        storage_box.append(self.disk_detail_label)
+        storage_box.append(self.disk_iops_label)
+        storage_box.append(self.disk_latency_label)
+
+        # Blkio weight
+        storage_box.append(Gtk.Separator())
+        blkio_title = Gtk.Label()
+        blkio_title.set_markup('<span weight="bold">⚖️ Prioridad de I/O</span>')
+        blkio_title.set_halign(Gtk.Align.START)
+        self.blkio_label = Gtk.Label()
+        self.blkio_label.set_css_classes(['caption'])
+        self.blkio_label.set_halign(Gtk.Align.START)
+        storage_box.append(blkio_title)
+        storage_box.append(self.blkio_label)
+
+        # Agregar como tab
+        tab_page = self.tab_view.append(storage_box)
+        tab_page.set_title("💾 Almacenamiento")
+        tab_page.set_tooltip("Disco, IOPS, latencia y prioridad")
+
+    def _create_network_tab(self):
+        """Crea el tab de red con interfaces, tráfico y estadísticas"""
+        net_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        net_box.set_margin_start(12)
+        net_box.set_margin_end(12)
+        net_box.set_margin_top(12)
+        net_box.set_margin_bottom(12)
+
+        # Título
+        net_label = Gtk.Label()
+        net_label.set_markup('<span weight="bold" size="large">🌐 Red (tiempo real)</span>')
+        net_label.set_halign(Gtk.Align.START)
+        net_box.append(net_label)
+        net_box.append(Gtk.Separator())
+
+        # Gráficos de red
+        self.net_rx_chart = MiniLineChartWidget(width=280, height=70)
+        self.net_rx_chart.set_title("⬇️ Descarga (MB/s)")
+        self.net_rx_chart.set_color(0.26, 0.80, 0.41)  # Verde
+        net_box.append(self.net_rx_chart)
+
+        self.net_tx_chart = MiniLineChartWidget(width=280, height=70)
+        self.net_tx_chart.set_title("⬆️ Subida (MB/s)")
+        self.net_tx_chart.set_color(0.96, 0.61, 0.07)  # Naranja
+        net_box.append(self.net_tx_chart)
+
+        # Labels con totales
+        self.net_rx_label = Gtk.Label()
+        self.net_tx_label = Gtk.Label()
+        self.net_rx_label.set_css_classes(['caption'])
+        self.net_tx_label.set_css_classes(['caption'])
+        self.net_rx_label.set_halign(Gtk.Align.START)
+        self.net_tx_label.set_halign(Gtk.Align.START)
+        net_box.append(self.net_rx_label)
+        net_box.append(self.net_tx_label)
+
+        # Interfaces de red
+        net_box.append(Gtk.Separator())
+        interfaces_title = Gtk.Label()
+        interfaces_title.set_markup('<span weight="bold">🔌 Interfaces de Red</span>')
+        interfaces_title.set_halign(Gtk.Align.START)
+        self.net_interfaces_label = Gtk.Label()
+        self.net_interfaces_label.set_css_classes(['caption'])
+        self.net_interfaces_label.set_halign(Gtk.Align.START)
+        self.net_interfaces_label.set_wrap(True)
+        net_box.append(interfaces_title)
+        net_box.append(self.net_interfaces_label)
+
+        # Agregar como tab
+        tab_page = self.tab_view.append(net_box)
+        tab_page.set_title("🌐 Red")
+        tab_page.set_tooltip("Interfaces, tráfico y estadísticas de red")
+
+    def _create_system_tab(self):
+        """Crea el tab de sistema con virtio, CPU features, hugepages, etc."""
+        sys_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        sys_box.set_margin_start(12)
+        sys_box.set_margin_end(12)
+        sys_box.set_margin_top(12)
+        sys_box.set_margin_bottom(12)
+
+        # Título
+        sys_label = Gtk.Label()
+        sys_label.set_markup('<span weight="bold" size="large">⚙️ Configuración del Sistema</span>')
+        sys_label.set_halign(Gtk.Align.START)
+        sys_box.append(sys_label)
+        sys_box.append(Gtk.Separator())
+
+        # Drivers Virtio
+        virtio_title = Gtk.Label()
+        virtio_title.set_markup('<span weight="bold">⚡ Drivers Virtio</span>')
+        virtio_title.set_halign(Gtk.Align.START)
+        self.virtio_drivers_label = Gtk.Label()
+        self.virtio_drivers_label.set_css_classes(['caption'])
+        self.virtio_drivers_label.set_halign(Gtk.Align.START)
+        sys_box.append(virtio_title)
+        sys_box.append(self.virtio_drivers_label)
+
+        sys_box.append(Gtk.Separator())
+
+        # CPU Features
+        cpu_features_title = Gtk.Label()
+        cpu_features_title.set_markup('<span weight="bold">🔧 CPU Features</span>')
+        cpu_features_title.set_halign(Gtk.Align.START)
+        self.cpu_features_label = Gtk.Label()
+        self.cpu_features_label.set_css_classes(['caption'])
+        self.cpu_features_label.set_halign(Gtk.Align.START)
+        self.cpu_features_label.set_wrap(True)
+        sys_box.append(cpu_features_title)
+        sys_box.append(self.cpu_features_label)
+
+        sys_box.append(Gtk.Separator())
+
+        # Hugepages
+        hp_title = Gtk.Label()
+        hp_title.set_markup('<span weight="bold">📄 Hugepages</span>')
+        hp_title.set_halign(Gtk.Align.START)
+        self.hugepages_label = Gtk.Label()
+        self.hugepages_label.set_css_classes(['caption'])
+        self.hugepages_label.set_halign(Gtk.Align.START)
+        sys_box.append(hp_title)
+        sys_box.append(self.hugepages_label)
+
+        sys_box.append(Gtk.Separator())
+
+        # Temperatura del host
+        temp_title = Gtk.Label()
+        temp_title.set_markup('<span weight="bold">🌡️ Temperatura del Host</span>')
+        temp_title.set_halign(Gtk.Align.START)
+        self.host_temp_label = Gtk.Label()
+        self.host_temp_label.set_css_classes(['caption'])
+        self.host_temp_label.set_halign(Gtk.Align.START)
+        sys_box.append(temp_title)
+        sys_box.append(self.host_temp_label)
+
+        sys_box.append(Gtk.Separator())
+
+        # Usuarios conectados
+        users_title = Gtk.Label()
+        users_title.set_markup('<span weight="bold">👥 Usuarios en el Guest</span>')
+        users_title.set_halign(Gtk.Align.START)
+        self.guest_users_label = Gtk.Label()
+        self.guest_users_label.set_css_classes(['caption'])
+        self.guest_users_label.set_halign(Gtk.Align.START)
+        sys_box.append(users_title)
+        sys_box.append(self.guest_users_label)
+
+        # Agregar como tab
+        tab_page = self.tab_view.append(sys_box)
+        tab_page.set_title("⚙️ Sistema")
+        tab_page.set_tooltip("Virtio, CPU features, hugepages y más")
+
     def set_loading(self, loading):
         """Muestra/oculta el spinner de carga"""
         self.is_updating = loading
