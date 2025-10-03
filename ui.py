@@ -1184,13 +1184,19 @@ class VMPanelWindow(Adw.ApplicationWindow):
 
     def setup_auto_update(self):
         """Configura la actualización automática cada 5 segundos"""
+        self.update_counter = 0
+        
         def auto_update():
+            self.update_counter += 1
+            
+            # Actualizar VMs cada 5 segundos
             for vm_card in self.vm_cards.values():
                 if not vm_card.is_updating:
                     vm_card.update_vm_status()
 
-            # Actualizar stats del dashboard
-            self._update_summary_stats()
+            # Actualizar dashboard solo cada 15 segundos (cada 3 ciclos)
+            if self.update_counter % 3 == 0:
+                self._update_summary_stats()
 
             return True  # Continuar el timer
 

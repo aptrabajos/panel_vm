@@ -25,14 +25,18 @@ class CircularProgressWidget(Gtk.DrawingArea):
 
     def set_value(self, percentage: float, label: str = None, title: str = None):
         """Actualiza el valor del gráfico circular"""
-        self.percentage = max(0.0, min(100.0, percentage))
-        if label:
-            self.label = label
-        else:
-            self.label = f"{self.percentage:.1f}%"
-        if title:
-            self.title = title
-        self.queue_draw()
+        new_percentage = max(0.0, min(100.0, percentage))
+        new_label = label if label else f"{new_percentage:.1f}%"
+        new_title = title if title else self.title
+        
+        # Solo redibujar si los valores cambiaron significativamente
+        if (abs(new_percentage - self.percentage) > 0.5 or 
+            new_label != self.label or 
+            new_title != self.title):
+            self.percentage = new_percentage
+            self.label = new_label
+            self.title = new_title
+            self.queue_draw()
 
     def _get_color(self) -> Tuple[float, float, float]:
         """Retorna color según porcentaje"""
@@ -173,10 +177,18 @@ class MiniLineChartWidget(Gtk.DrawingArea):
 
     def add_data_point(self, value: float):
         """Agrega un punto al historial"""
-        self.data_points.append(max(0.0, min(100.0, value)))
+        new_value = max(0.0, min(100.0, value))
+        
+        # Solo redibujar si el valor cambió significativamente o es un nuevo punto
+        should_update = (not self.data_points or 
+                        abs(new_value - self.data_points[-1]) > 0.5)
+        
+        self.data_points.append(new_value)
         if len(self.data_points) > self.max_points:
             self.data_points.pop(0)
-        self.queue_draw()
+        
+        if should_update:
+            self.queue_draw()
 
     def set_title(self, title: str):
         """Establece el título"""
