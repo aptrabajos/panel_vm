@@ -567,6 +567,12 @@ class VMCard(Gtk.Box):
         self.net_rx_chart.add_data_point(net_rx_percent)
         self.net_tx_chart.add_data_point(net_tx_percent)
 
+        # Actualizar quick stat de red
+        if net_rx_mbps > 0 or net_tx_mbps > 0:
+            self.net_mini_value.set_markup(f'<span size="large" weight="bold">↓{net_rx_mbps:.1f} ↑{net_tx_mbps:.1f} MB/s</span>')
+        else:
+            self.net_mini_value.set_markup('<span size="large">0 MB/s</span>')
+
         # === Disco: calcular IOPS y latencia ===
         block_capacity = stats.get('block_capacity', 0)
         block_allocation = stats.get('block_allocation', 0)
