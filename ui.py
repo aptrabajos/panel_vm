@@ -904,11 +904,18 @@ class VMPanelWindow(Adw.ApplicationWindow):
         self.vms_box.set_column_spacing(16)
         self.vms_box.set_column_homogeneous(True)
         
-        # Crear tarjetas para cada VM
+        # Crear tarjetas para cada VM en grid de 2 columnas
+        row = 0
+        col = 0
         for vm_name in self.vm_manager.vm_names:
             vm_card = VMCard(vm_name, self.vm_manager, self.notification_manager, self.error_handler)
             self.vm_cards[vm_name] = vm_card
-            self.vms_box.append(vm_card)
+            self.vms_box.attach(vm_card, col, row, 1, 1)
+
+            col += 1
+            if col >= 2:  # 2 columnas estilo Proxmox
+                col = 0
+                row += 1
         
         main_box.append(self.vms_box)
         
