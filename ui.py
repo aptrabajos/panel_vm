@@ -847,21 +847,62 @@ class VMPanelWindow(Adw.ApplicationWindow):
         main_box.set_margin_start(24)
         main_box.set_margin_end(24)
         
-        # Título
-        title_label = Gtk.Label()
-        title_label.set_markup('<span size="x-large" weight="bold">Panel de Control - Máquinas Virtuales</span>')
-        title_label.set_halign(Gtk.Align.START)
-        main_box.append(title_label)
-        
-        # Descripción
-        desc_label = Gtk.Label()
-        desc_label.set_text("Administra el estado de tus máquinas virtuales Manjaro")
-        desc_label.set_css_classes(['dim-label'])
-        desc_label.set_halign(Gtk.Align.START)
-        main_box.append(desc_label)
-        
-        # Contenedor para las tarjetas de VMs
-        self.vms_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        # === DASHBOARD DE RESUMEN ===
+        summary_frame = Gtk.Frame()
+        summary_frame.set_css_classes(['card'])
+        summary_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        summary_box.set_margin_top(16)
+        summary_box.set_margin_bottom(16)
+        summary_box.set_margin_start(16)
+        summary_box.set_margin_end(16)
+
+        # Título del resumen
+        summary_title = Gtk.Label()
+        summary_title.set_markup('<span size="large" weight="bold">📊 Resumen General</span>')
+        summary_title.set_halign(Gtk.Align.START)
+        summary_box.append(summary_title)
+
+        # Grid de quick stats
+        stats_grid = Gtk.Grid()
+        stats_grid.set_row_spacing(12)
+        stats_grid.set_column_spacing(12)
+        stats_grid.set_column_homogeneous(True)
+
+        # Card de VMs totales
+        self.total_vms_card = self._create_stat_card("💻 Máquinas Virtuales", "0 activas / 0 total", "success")
+        stats_grid.attach(self.total_vms_card, 0, 0, 1, 1)
+
+        # Card de CPU total
+        self.total_cpu_card = self._create_stat_card("⚙️ CPU Total", "0%", "info")
+        stats_grid.attach(self.total_cpu_card, 1, 0, 1, 1)
+
+        # Card de RAM total
+        self.total_ram_card = self._create_stat_card("💾 RAM Total", "0 GB", "info")
+        stats_grid.attach(self.total_ram_card, 2, 0, 1, 1)
+
+        # Card de temperatura del host
+        self.host_temp_card = self._create_stat_card("🌡️ Temperatura Host", "N/A", "warning")
+        stats_grid.attach(self.host_temp_card, 3, 0, 1, 1)
+
+        summary_box.append(stats_grid)
+        summary_frame.set_child(summary_box)
+        main_box.append(summary_frame)
+
+        # Separador
+        main_box.append(Gtk.Separator())
+
+        # Título de VMs
+        vms_title = Gtk.Label()
+        vms_title.set_markup('<span size="large" weight="bold">💻 Máquinas Virtuales</span>')
+        vms_title.set_halign(Gtk.Align.START)
+        vms_title.set_margin_top(12)
+        main_box.append(vms_title)
+
+        # Contenedor para las tarjetas de VMs (Grid en lugar de Box vertical)
+        self.vms_box = Gtk.Grid()
+        self.vms_box.set_row_spacing(16)
+        self.vms_box.set_column_spacing(16)
+        self.vms_box.set_column_homogeneous(True)
         
         # Crear tarjetas para cada VM
         for vm_name in self.vm_manager.vm_names:
