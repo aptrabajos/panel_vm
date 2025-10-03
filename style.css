@@ -236,3 +236,123 @@ expander separator {
 expander > box {
     transition: all 200ms ease;
 }
+
+/* === DASHBOARD ESTILO PROXMOX === */
+
+/* Stats cards del dashboard */
+.stat-card-success {
+    background: linear-gradient(135deg, rgba(38, 162, 105, 0.1), rgba(46, 194, 126, 0.05));
+    border: 1px solid rgba(38, 162, 105, 0.3);
+    border-radius: 12px;
+    transition: all 200ms ease;
+}
+
+.stat-card-success:hover {
+    background: linear-gradient(135deg, rgba(38, 162, 105, 0.15), rgba(46, 194, 126, 0.08));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(38, 162, 105, 0.2);
+}
+
+.stat-card-info {
+    background: linear-gradient(135deg, rgba(28, 113, 216, 0.1), rgba(53, 132, 228, 0.05));
+    border: 1px solid rgba(28, 113, 216, 0.3);
+    border-radius: 12px;
+    transition: all 200ms ease;
+}
+
+.stat-card-info:hover {
+    background: linear-gradient(135deg, rgba(28, 113, 216, 0.15), rgba(53, 132, 228, 0.08));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(28, 113, 216, 0.2);
+}
+
+.stat-card-warning {
+    background: linear-gradient(135deg, rgba(230, 97, 0, 0.1), rgba(245, 194, 17, 0.05));
+    border: 1px solid rgba(230, 97, 0, 0.3);
+    border-radius: 12px;
+    transition: all 200ms ease;
+}
+
+.stat-card-warning:hover {
+    background: linear-gradient(135deg, rgba(230, 97, 0, 0.15), rgba(245, 194, 17, 0.08));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(230, 97, 0, 0.2);
+}
+
+/* Grid de VMs estilo Proxmox */
+grid.vms-grid {
+    margin: 16px 0;
+}
+
+/* VM Cards más compactas estilo Proxmox */
+.vm-card {
+    min-height: 200px;
+}
+
+/* Mejora del card general */
+.card {
+    background: @card_bg_color;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.card:hover {
+    border-color: rgba(28, 113, 216, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Badges para indicadores */
+.badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.badge-success {
+    background: rgba(38, 162, 105, 0.15);
+    color: @success_color;
+}
+
+.badge-error {
+    background: rgba(192, 28, 40, 0.15);
+    color: @destructive_color;
+}
+
+.badge-warning {
+    background: rgba(230, 97, 0, 0.15);
+    color: @warning_color;
+}
+
+.badge-info {
+    background: rgba(28, 113, 216, 0.15);
+    color: @accent_color;
+}
+
+/* Separadores más sutiles */
+separator.dashboard-separator {
+    background: rgba(0, 0, 0, 0.06);
+    min-height: 1px;
+    margin: 20px 0;
+}
+
+/* Typography mejorada */
+.dashboard-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.stat-value {
+    font-family: monospace;
+    font-weight: 700;
+}
+
+/* Efectos glassmorphism sutiles */
+.glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
