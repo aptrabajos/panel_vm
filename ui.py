@@ -101,11 +101,11 @@ class VMCard(Gtk.Box):
         self.details_expander = Gtk.Expander()
         self.details_expander.set_label("📊 Ver detalles avanzados")
 
-        # Contenedor de detalles
+        # Contenedor de detalles con TabView
         details_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
         details_box.set_margin_top(12)
 
-        # === QUICK STATS EN GRID ===
+        # === QUICK STATS EN GRID (mantener en la parte superior) ===
         quick_stats_grid = Gtk.Grid()
         quick_stats_grid.set_row_spacing(12)
         quick_stats_grid.set_column_spacing(12)
@@ -157,8 +157,15 @@ class VMCard(Gtk.Box):
         details_box.append(quick_stats_grid)
         details_box.append(Gtk.Separator())
 
-        # === TODO: TABS PARA ORGANIZAR CONTENIDO (EN DESARROLLO) ===
-        # Por ahora mantenemos el contenido existente sin tabs
+        # === TABVIEW para organizar contenido ===
+        self.tab_view = Adw.TabView()
+        self.tab_view.set_vexpand(True)
+
+        # Tab Bar (pestañas superiores)
+        tab_bar = Adw.TabBar()
+        tab_bar.set_view(self.tab_view)
+        details_box.append(tab_bar)
+        details_box.append(self.tab_view)
 
         # === Mini gráficos de línea (historial) ===
         charts_label = Gtk.Label()
