@@ -157,27 +157,8 @@ class VMCard(Gtk.Box):
         details_box.append(quick_stats_grid)
         details_box.append(Gtk.Separator())
 
-        # === TABS PARA ORGANIZAR CONTENIDO ===
-        tab_view = Adw.TabView()
-        tab_view.set_vexpand(True)
-
-        # TAB 1: Rendimiento
-        self._create_performance_tab(tab_view)
-
-        # TAB 2: Almacenamiento
-        self._create_storage_tab(tab_view)
-
-        # TAB 3: Red
-        self._create_network_tab(tab_view)
-
-        # TAB 4: Sistema
-        self._create_system_tab(tab_view)
-
-        # Agregar tab bar
-        tab_bar = Adw.TabBar()
-        tab_bar.set_view(tab_view)
-        details_box.append(tab_bar)
-        details_box.append(tab_view)
+        # === TODO: TABS PARA ORGANIZAR CONTENIDO (EN DESARROLLO) ===
+        # Por ahora mantenemos el contenido existente sin tabs
 
         # === Mini gráficos de línea (historial) ===
         charts_label = Gtk.Label()
