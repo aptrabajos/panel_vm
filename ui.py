@@ -207,6 +207,58 @@ class VMCard(Gtk.Box):
         details_box.append(self.net_rx_label)
         details_box.append(self.net_tx_label)
 
+        details_box.append(Gtk.Separator())
+
+        # === Información Avanzada ===
+        advanced_label = Gtk.Label()
+        advanced_label.set_markup('<span weight="bold">Información Avanzada</span>')
+        advanced_label.set_halign(Gtk.Align.START)
+        details_box.append(advanced_label)
+
+        # Interfaces de red
+        self.net_interfaces_label = Gtk.Label()
+        self.net_interfaces_label.set_css_classes(['caption'])
+        self.net_interfaces_label.set_halign(Gtk.Align.START)
+        self.net_interfaces_label.set_wrap(True)
+        details_box.append(self.net_interfaces_label)
+
+        # Drivers virtio
+        self.virtio_drivers_label = Gtk.Label()
+        self.virtio_drivers_label.set_css_classes(['caption'])
+        self.virtio_drivers_label.set_halign(Gtk.Align.START)
+        details_box.append(self.virtio_drivers_label)
+
+        # CPU features
+        self.cpu_features_label = Gtk.Label()
+        self.cpu_features_label.set_css_classes(['caption'])
+        self.cpu_features_label.set_halign(Gtk.Align.START)
+        self.cpu_features_label.set_wrap(True)
+        details_box.append(self.cpu_features_label)
+
+        # Hugepages
+        self.hugepages_label = Gtk.Label()
+        self.hugepages_label.set_css_classes(['caption'])
+        self.hugepages_label.set_halign(Gtk.Align.START)
+        details_box.append(self.hugepages_label)
+
+        # Blkio weight
+        self.blkio_label = Gtk.Label()
+        self.blkio_label.set_css_classes(['caption'])
+        self.blkio_label.set_halign(Gtk.Align.START)
+        details_box.append(self.blkio_label)
+
+        # Temperatura del host
+        self.host_temp_label = Gtk.Label()
+        self.host_temp_label.set_css_classes(['caption'])
+        self.host_temp_label.set_halign(Gtk.Align.START)
+        details_box.append(self.host_temp_label)
+
+        # Usuarios conectados
+        self.guest_users_label = Gtk.Label()
+        self.guest_users_label.set_css_classes(['caption'])
+        self.guest_users_label.set_halign(Gtk.Align.START)
+        details_box.append(self.guest_users_label)
+
         self.details_expander.set_child(details_box)
         
         # Botones de control
