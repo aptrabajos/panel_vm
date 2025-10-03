@@ -575,6 +575,173 @@ class VMManager:
             logger.debug(f"Error obteniendo uptime de {vm_name}: {e}")
             return None
 
+    def get_vm_network_interfaces(self, vm_name: str) -> Optional[List[Dict]]:
+        """Obtiene información detallada de las interfaces de red"""
+        try:
+            import xml.etree.ElementTree as ET
+
+            # Obtener XML de la VM
+            success, stdout, stderr = self._run_virsh_command(["dumpxml", vm_name])
+            if not success:
+                return None
+
+            root = ET.fromstring(stdout)
+            interfaces = []
+
+            # Buscar todas las interfaces
+            for iface in root.findall(".//devices/interface"):
+                iface_info = {}
+                iface_info['type'] = iface.get('type', 'unknown')
+
+                # MAC address
+                mac = iface.find('mac')
+                if mac is not None:
+                    iface_info['mac'] = mac.get('address', 'N/A')
+
+                # Source (red o bridge)
+                source = iface.find('source')
+                if source is not None:
+                    iface_info['source'] = source.get('network') or source.get('bridge') or source.get('dev') or 'N/A'
+
+                # Model
+                model = iface.find('model')
+                if model is not None:
+                    iface_info['model'] = model.get('type', 'N/A')
+
+                # Target (nombre dentro del host)
+                target = iface.find('target')
+                if target is not None:
+                    iface_info['target'] = target.get('dev', 'N/A')
+
+                # Alias
+                alias = iface.find('alias')
+                if alias is not None:
+                    iface_info['alias'] = alias.get('name', 'N/A')
+
+                # Link state (si está disponible)
+                link = iface.find('link')
+                if link is not None:
+                    iface_info['link_state'] = link.get('state', 'unknown')
+                else:
+                    iface_info['link_state'] = 'up'  # Por defecto asumimos up
+
+                interfaces.append(iface_info)
+
+            return interfaces if interfaces else None
+        except Exception as e:
+            logger.error(f"Error obteniendo interfaces de red de {vm_name}: {e}")
+            return None
+
+    def get_vm_guest_users(self, vm_name: str) -> Optional[List[str]]:
+        """Obtiene usuarios conectados en el guest via qemu-guest-agent"""
+        try:
+            import json
+            success, stdout, stderr = self._run_virsh_command([
+                "qemu-agent-command", vm_name,
+                '{"execute":"guest-get-users"}'
+            ])
+
+            if not success:
+                return None
+
+            result = json.loads(stdout)
+            if 'return' in result:
+                users = []
+                for user in result['return']:
+                    username = user.get('user', 'unknown')
+                    users.append(username)
+                return users if users else None
+
+            return None
+        except Exception as e:
+            logger.debug(f"Error obteniendo usuarios de {vm_name}: {e}")
+            return None
+
+    def get_vm_host_cpu_temp(self) -> Optional[float]:
+        """Obtiene temperatura de CPU del host"""
+        try:
+            import glob
+            # Buscar sensores de temperatura
+            temp_files = glob.glob('/sys/class/thermal/thermal_zone*/temp')
+
+            if not temp_files:
+                # Intentar con sensors
+                result = subprocess.run(['sensors', '-u'], capture_output=True, text=True)
+                if result.returncode == 0:
+                    for line in result.stdout.split('\n'):
+                        if 'temp1_input' in line or 'Package id 0' in line:
+                            try:
+                                temp = float(line.split(':')[1].strip())
+                                return temp
+                            except:
+                                continue
+                return None
+
+            # Leer temperatura del primer sensor
+            with open(temp_files[0], 'r') as f:
+                temp_millidegrees = int(f.read().strip())
+                return temp_millidegrees / 1000.0  # Convertir a grados
+        except Exception as e:
+            logger.debug(f"Error obteniendo temperatura del host: {e}")
+            return None
+
+    def get_vm_virtio_drivers(self, vm_name: str) -> Optional[Dict]:
+        """Obtiene información sobre drivers virtio activos"""
+        try:
+            import xml.etree.ElementTree as ET
+
+            success, stdout, stderr = self._run_virsh_command(["dumpxml", vm_name])
+            if not success:
+                return None
+
+            root = ET.fromstring(stdout)
+            virtio_info = {
+                'disk': False,
+                'network': False,
+                'balloon': False,
+                'serial': False,
+                'rng': False,
+                'scsi': False
+            }
+
+            # Buscar discos virtio
+            for disk in root.findall(".//devices/disk"):
+                target = disk.find('target')
+                if target is not None and target.get('bus') == 'virtio':
+                    virtio_info['disk'] = True
+
+            # Buscar red virtio
+            for iface in root.findall(".//devices/interface"):
+                model = iface.find('model')
+                if model is not None and model.get('type') == 'virtio':
+                    virtio_info['network'] = True
+
+            # Buscar balloon
+            memballoon = root.find(".//devices/memballoon")
+            if memballoon is not None and memballoon.get('model') == 'virtio':
+                virtio_info['balloon'] = True
+
+            # Buscar serial virtio
+            for channel in root.findall(".//devices/channel"):
+                target = channel.find('target')
+                if target is not None and target.get('type') == 'virtio':
+                    virtio_info['serial'] = True
+
+            # Buscar RNG virtio
+            rng = root.find(".//devices/rng")
+            if rng is not None and rng.get('model') == 'virtio':
+                virtio_info['rng'] = True
+
+            # Buscar SCSI virtio
+            for controller in root.findall(".//devices/controller"):
+                if controller.get('type') == 'scsi' and controller.get('model') == 'virtio-scsi':
+                    virtio_info['scsi'] = True
+
+            return virtio_info
+        except Exception as e:
+            logger.error(f"Error obteniendo drivers virtio de {vm_name}: {e}")
+            return None
+
     def _check_system_requirements(self):
         """Verifica los requisitos del sistema"""
         try:
