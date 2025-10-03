@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs y temporales
+*.log
+/tmp/
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Archivos de construcción
+*.tar.gz
+*.zip
+*.deb
+*.rpm
+*.pkg.tar.zst
+pkg/
+src/
+
+# Archivos generados por build_package.sh
+dist/
+build/
+
+# Archivos de configuración local
+.env
+.env.local
+*.local
+
+# Archivos de sistema
+.Trash-*/
+Thumbs.db
+
+# Archivos de test
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Archivos específicos del proyecto
+debug_output.txt
+/tmp/vm-panel-*.log
