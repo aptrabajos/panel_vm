@@ -690,6 +690,15 @@ class VMCard(Gtk.Box):
         self.net_tx_label.set_text("⬆️ Enviado: N/A")
         self.uptime_label.set_text("⏰ Uptime: N/A")
 
+        # Limpiar información avanzada
+        self.net_interfaces_label.set_text("")
+        self.virtio_drivers_label.set_text("")
+        self.cpu_features_label.set_text("")
+        self.hugepages_label.set_text("")
+        self.blkio_label.set_text("")
+        self.host_temp_label.set_text("")
+        self.guest_users_label.set_text("")
+
         # Limpiar historial
         self.cpu_history.clear()
         self.memory_history.clear()
