@@ -603,6 +603,7 @@ class VMCard(Gtk.Box):
         # Memoria: usar datos consistentes de domstats
         mem_percent = 0
         mem_label = ""
+        mem_unused = stats.get('memory_unused')
         mem_rss = stats.get('memory_rss')
 
         if mem_actual and mem_unused is not None:

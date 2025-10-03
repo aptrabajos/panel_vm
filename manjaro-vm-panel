@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""
+Panel de Máquinas Virtuales Manjaro
+Ejecutable standalone para gestión de VMs QEMU/KVM
+"""
+
+import sys
+import os
+
+# Asegurar que estamos en el directorio correcto
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(SCRIPT_DIR)
+
+# Añadir el directorio al path para imports
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
+
+# Verificar dependencias
+try:
+    import gi
+    gi.require_version('Gtk', '4.0')
+    gi.require_version('Adw', '1')
+    from gi.repository import Gtk, Adw, GLib, Gio
+except ImportError as e:
+    print("❌ Error: Dependencias GTK4/Adwaita no encontradas")
+    print(f"   Detalles: {e}")
+    print("\n📦 Instala las dependencias con:")
+    print("   sudo pacman -S python-gobject gtk4 libadwaita")
+    sys.exit(1)
+
+# Verificar que los módulos del proyecto existen
+try:
+    from vm_manager import VMManager
+    from ui import VMPanelWindow
+except ImportError as e:
+    print(f"❌ Error: No se pudieron cargar los módulos del proyecto")
+    print(f"   Detalles: {e}")
+    print(f"\n📂 Asegúrate de ejecutar desde: {SCRIPT_DIR}")
+    sys.exit(1)
+
+class VMPanelApp(Adw.Application):
+    def __init__(self):
+        super().__init__(application_id='com.manjaro.vmpanel')
+        self.create_action('quit', self.quit, ['<primary>q'])
+
+    def do_activate(self):
+        win = self.props.active_window
+        if not win:
+            win = VMPanelWindow(application=self)
+            print("✓ Ventana creada")
+        
+        # Asegurar que la ventana sea visible
+        win.set_visible(True)
+        win.present()
+        print("✓ Ventana presentada")
+
+    def create_action(self, name, callback, shortcuts=None):
+        action = Gio.SimpleAction.new(name, None)
+        action.connect('activate', callback)
+        self.add_action(action)
+        if shortcuts:
+            self.set_accels_for_action(f'app.{name}', shortcuts)
+
+def main():
+    """Punto de entrada principal"""
+    app = VMPanelApp()
+    return app.run(sys.argv)
+
+if __name__ == '__main__':
+    sys.exit(main())
