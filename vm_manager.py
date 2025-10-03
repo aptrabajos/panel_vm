@@ -742,6 +742,100 @@ class VMManager:
             logger.error(f"Error obteniendo drivers virtio de {vm_name}: {e}")
             return None
 
+    def get_vm_cpu_features(self, vm_name: str) -> Optional[List[str]]:
+        """Obtiene los CPU features/flags habilitados"""
+        try:
+            import xml.etree.ElementTree as ET
+
+            success, stdout, stderr = self._run_virsh_command(["dumpxml", vm_name])
+            if not success:
+                return None
+
+            root = ET.fromstring(stdout)
+            features = []
+
+            # Features del CPU
+            cpu = root.find('.//cpu')
+            if cpu is not None:
+                # CPU mode
+                mode = cpu.get('mode', 'N/A')
+                features.append(f"mode:{mode}")
+
+                # Features específicos
+                for feature in cpu.findall('feature'):
+                    name = feature.get('name')
+                    policy = feature.get('policy', 'require')
+                    if name:
+                        features.append(f"{name}:{policy}")
+
+            # Features generales de la VM
+            vm_features = root.find('.//features')
+            if vm_features is not None:
+                for feature in vm_features:
+                    features.append(feature.tag)
+
+            return features if features else None
+        except Exception as e:
+            logger.error(f"Error obteniendo CPU features de {vm_name}: {e}")
+            return None
+
+    def get_vm_hugepages(self, vm_name: str) -> Optional[Dict]:
+        """Obtiene información sobre hugepages"""
+        try:
+            import xml.etree.ElementTree as ET
+
+            success, stdout, stderr = self._run_virsh_command(["dumpxml", vm_name])
+            if not success:
+                return None
+
+            root = ET.fromstring(stdout)
+            hugepages_info = {'enabled': False}
+
+            # Buscar configuración de hugepages
+            memoryBacking = root.find('.//memoryBacking')
+            if memoryBacking is not None:
+                hugepages = memoryBacking.find('hugepages')
+                if hugepages is not None:
+                    hugepages_info['enabled'] = True
+                    pages = []
+                    for page in hugepages.findall('page'):
+                        page_info = {
+                            'size': page.get('size', 'N/A'),
+                            'unit': page.get('unit', 'KiB'),
+                            'nodeset': page.get('nodeset', 'all')
+                        }
+                        pages.append(page_info)
+                    hugepages_info['pages'] = pages
+
+            return hugepages_info
+        except Exception as e:
+            logger.error(f"Error obteniendo hugepages de {vm_name}: {e}")
+            return None
+
+    def get_vm_blkio_weight(self, vm_name: str) -> Optional[int]:
+        """Obtiene el peso de I/O de disco (blkio weight)"""
+        try:
+            import xml.etree.ElementTree as ET
+
+            success, stdout, stderr = self._run_virsh_command(["dumpxml", vm_name])
+            if not success:
+                return None
+
+            root = ET.fromstring(stdout)
+
+            # Buscar blkio tune
+            blkiotune = root.find('.//blkiotune')
+            if blkiotune is not None:
+                weight = blkiotune.find('weight')
+                if weight is not None and weight.text:
+                    return int(weight.text)
+
+            # Si no está configurado, retornar peso por defecto
+            return 500  # Valor por defecto de cgroups
+        except Exception as e:
+            logger.error(f"Error obteniendo blkio weight de {vm_name}: {e}")
+            return None
+
     def _check_system_requirements(self):
         """Verifica los requisitos del sistema"""
         try:
