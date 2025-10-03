@@ -933,21 +933,110 @@ class VMPanelWindow(Adw.ApplicationWindow):
             vm_card.notification_manager = self.notification_manager
             vm_card.error_handler = self.error_handler
     
+    def _create_stat_card(self, title, value, style_class):
+        """Crea una card de estadística rápida"""
+        card_frame = Gtk.Frame()
+        card_frame.set_css_classes(['card', f'stat-card-{style_class}'])
+
+        card_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        card_box.set_margin_top(12)
+        card_box.set_margin_bottom(12)
+        card_box.set_margin_start(12)
+        card_box.set_margin_end(12)
+
+        # Título
+        title_label = Gtk.Label()
+        title_label.set_markup(f'<span size="small">{title}</span>')
+        title_label.set_halign(Gtk.Align.START)
+        title_label.set_css_classes(['dim-label'])
+        card_box.append(title_label)
+
+        # Valor
+        value_label = Gtk.Label()
+        value_label.set_markup(f'<span size="x-large" weight="bold">{value}</span>')
+        value_label.set_halign(Gtk.Align.START)
+        card_box.append(value_label)
+
+        card_frame.set_child(card_box)
+
+        # Guardar referencia al label de valor para actualizarlo después
+        card_frame.value_label = value_label
+
+        return card_frame
+
+    def _update_summary_stats(self):
+        """Actualiza las estadísticas del dashboard de resumen"""
+        total_vms = len(self.vm_manager.vm_names)
+        running_vms = sum(1 for vm in self.vm_manager.list_all_vms() if vm['running'])
+
+        # VMs totales
+        self.total_vms_card.value_label.set_markup(
+            f'<span size="x-large" weight="bold">{running_vms} activas / {total_vms} total</span>'
+        )
+
+        # CPU total (promedio de todas las VMs)
+        total_cpu = 0
+        cpu_count = 0
+        for vm_card in self.vm_cards.values():
+            if hasattr(vm_card, 'last_cpu_time') and vm_card.last_cpu_time is not None:
+                stats = self.vm_manager.get_vm_detailed_stats(vm_card.vm_name)
+                if stats and stats.get('cpu_time'):
+                    # Aproximación simplificada
+                    cpu_count += 1
+
+        # Mostrar un promedio simple (esto se puede mejorar)
+        avg_cpu = total_cpu / max(1, cpu_count) if cpu_count > 0 else 0
+        self.total_cpu_card.value_label.set_markup(
+            f'<span size="x-large" weight="bold">~{avg_cpu:.1f}%</span>'
+        )
+
+        # RAM total
+        total_ram_gb = 0
+        for vm_card in self.vm_cards.values():
+            mem_info = self.vm_manager.get_vm_memory_usage(vm_card.vm_name)
+            if mem_info and 'actual' in mem_info and 'unused' in mem_info:
+                used_kb = mem_info['actual'] - mem_info['unused']
+                total_ram_gb += used_kb / (1024 * 1024)
+
+        self.total_ram_card.value_label.set_markup(
+            f'<span size="x-large" weight="bold">{total_ram_gb:.1f} GB</span>'
+        )
+
+        # Temperatura del host
+        host_temp = self.vm_manager.get_vm_host_cpu_temp()
+        if host_temp:
+            temp_icon = "🟢" if host_temp < 60 else ("🟡" if host_temp < 80 else "🔴")
+            self.host_temp_card.value_label.set_markup(
+                f'<span size="x-large" weight="bold">{temp_icon} {host_temp:.1f}°C</span>'
+            )
+        else:
+            self.host_temp_card.value_label.set_markup(
+                f'<span size="x-large" weight="bold">N/A</span>'
+            )
+
     def setup_auto_update(self):
         """Configura la actualización automática cada 5 segundos"""
         def auto_update():
             for vm_card in self.vm_cards.values():
                 if not vm_card.is_updating:
                     vm_card.update_vm_status()
+
+            # Actualizar stats del dashboard
+            self._update_summary_stats()
+
             return True  # Continuar el timer
-        
+
+        # Primera actualización inmediata
+        self._update_summary_stats()
+
         GLib.timeout_add_seconds(5, auto_update)
-    
+
     def on_refresh_clicked(self, button):
         """Maneja el clic del botón de actualizar"""
         for vm_card in self.vm_cards.values():
             vm_card.update_vm_status()
-    
+        self._update_summary_stats()
+
     def load_css(self):
         """Carga los estilos CSS personalizados"""
         css_provider = Gtk.CssProvider()
