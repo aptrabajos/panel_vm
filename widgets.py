@@ -47,54 +47,112 @@ class CircularProgressWidget(Gtk.DrawingArea):
             return (0.88, 0.11, 0.14)
 
     def _on_draw(self, area, ctx, width, height):
-        """Dibuja el gráfico circular"""
+        """Dibuja el gráfico circular moderno"""
         # Centro y radio (desplazar círculo hacia abajo para dejar espacio al título)
         center_x = width / 2
         center_y = height - (self.size / 2)  # Posicionar círculo en la parte inferior
-        radius = (self.size / 2) - 10
-        line_width = 12
+        radius = (self.size / 2) - 12
+        line_width = 14
 
-        # Fondo del círculo (gris claro)
+        # Sombra del fondo del círculo
+        ctx.save()
+        ctx.set_line_width(line_width + 2)
+        ctx.set_source_rgba(0, 0, 0, 0.15)
+        ctx.arc(center_x + 2, center_y + 2, radius, 0, 2 * math.pi)
+        ctx.stroke()
+        ctx.restore()
+
+        # Fondo del círculo con gradiente
+        ctx.save()
         ctx.set_line_width(line_width)
-        ctx.set_source_rgba(0.2, 0.2, 0.2, 0.2)
+        
+        # Crear gradiente radial para el fondo
+        pattern = cairo.RadialGradient(center_x, center_y, 0, center_x, center_y, radius)
+        pattern.add_color_stop_rgba(0, 0.15, 0.15, 0.15, 0.3)
+        pattern.add_color_stop_rgba(1, 0.05, 0.05, 0.05, 0.1)
+        ctx.set_source(pattern)
         ctx.arc(center_x, center_y, radius, 0, 2 * math.pi)
         ctx.stroke()
+        ctx.restore()
 
-        # Arco de progreso
+        # Arco de progreso con efectos modernos
         if self.percentage > 0:
             r, g, b = self._get_color()
-            ctx.set_source_rgb(r, g, b)
-            ctx.set_line_width(line_width)
+            
+            # Sombra del arco de progreso
+            ctx.save()
+            ctx.set_line_width(line_width + 1)
+            ctx.set_source_rgba(r, g, b, 0.3)
             ctx.set_line_cap(cairo.LINE_CAP_ROUND)
-
-            # Ángulo inicial en -90° (arriba)
             start_angle = -math.pi / 2
             end_angle = start_angle + (2 * math.pi * self.percentage / 100)
+            ctx.arc(center_x + 1, center_y + 1, radius, start_angle, end_angle)
+            ctx.stroke()
+            ctx.restore()
 
+            # Arco principal con gradiente
+            ctx.save()
+            ctx.set_line_width(line_width)
+            ctx.set_line_cap(cairo.LINE_CAP_ROUND)
+            
+            # Crear gradiente para el arco
+            pattern = cairo.LinearGradient(center_x - radius, center_y, center_x + radius, center_y)
+            pattern.add_color_stop_rgba(0, r, g, b, 0.8)
+            pattern.add_color_stop_rgba(0.5, r + 0.1, g + 0.1, b + 0.1, 1.0)
+            pattern.add_color_stop_rgba(1, r, g, b, 0.8)
+            ctx.set_source(pattern)
+            
             ctx.arc(center_x, center_y, radius, start_angle, end_angle)
             ctx.stroke()
+            ctx.restore()
 
-        # Texto del porcentaje
-        ctx.set_source_rgb(0.9, 0.9, 0.9)
+            # Brillo interior
+            ctx.save()
+            ctx.set_line_width(line_width - 4)
+            ctx.set_source_rgba(1, 1, 1, 0.2)
+            ctx.set_line_cap(cairo.LINE_CAP_ROUND)
+            ctx.arc(center_x, center_y, radius, start_angle, end_angle)
+            ctx.stroke()
+            ctx.restore()
+
+        # Texto del porcentaje con sombra
+        ctx.save()
         ctx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-        ctx.set_font_size(22)
-
+        ctx.set_font_size(24)
+        
+        # Sombra del texto
+        ctx.set_source_rgba(0, 0, 0, 0.5)
         text_extents = ctx.text_extents(self.label)
         text_x = center_x - text_extents.width / 2
         text_y = center_y + text_extents.height / 2
-
+        ctx.move_to(text_x + 1, text_y + 1)
+        ctx.show_text(self.label)
+        
+        # Texto principal
+        ctx.set_source_rgb(0.95, 0.95, 0.95)
         ctx.move_to(text_x, text_y)
         ctx.show_text(self.label)
+        ctx.restore()
 
-        # Título encima si existe (con más espacio)
+        # Título encima con mejor estilo
         if self.title:
-            ctx.set_font_size(12)
-            ctx.set_source_rgb(0.7, 0.7, 0.7)
+            ctx.save()
+            ctx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+            ctx.set_font_size(13)
+            
+            # Sombra del título
+            ctx.set_source_rgba(0, 0, 0, 0.4)
             title_extents = ctx.text_extents(self.title)
             title_x = center_x - title_extents.width / 2
-            title_y = center_y - radius - 15  # Aumentado de 5 a 15 para más espacio
+            title_y = center_y - radius - 18
+            ctx.move_to(title_x + 1, title_y + 1)
+            ctx.show_text(self.title)
+            
+            # Título principal
+            ctx.set_source_rgb(0.8, 0.8, 0.8)
             ctx.move_to(title_x, title_y)
             ctx.show_text(self.title)
+            ctx.restore()
 
 
 class MiniLineChartWidget(Gtk.DrawingArea):
@@ -131,40 +189,62 @@ class MiniLineChartWidget(Gtk.DrawingArea):
         self.queue_draw()
 
     def _on_draw(self, area, ctx, width, height):
-        """Dibuja el mini gráfico de línea"""
+        """Dibuja el mini gráfico de línea moderno"""
         if not self.data_points:
             return
 
         # Márgenes
-        margin_left = 10
-        margin_right = 10
-        margin_top = 20
-        margin_bottom = 10
+        margin_left = 12
+        margin_right = 12
+        margin_top = 22
+        margin_bottom = 12
 
         chart_width = width - margin_left - margin_right
         chart_height = height - margin_top - margin_bottom
 
-        # Fondo
-        ctx.set_source_rgba(0.1, 0.1, 0.1, 0.3)
+        # Fondo con gradiente
+        ctx.save()
+        pattern = cairo.LinearGradient(margin_left, margin_top, margin_left, margin_top + chart_height)
+        pattern.add_color_stop_rgba(0, 0.08, 0.08, 0.08, 0.4)
+        pattern.add_color_stop_rgba(1, 0.04, 0.04, 0.04, 0.2)
+        ctx.set_source(pattern)
         ctx.rectangle(margin_left, margin_top, chart_width, chart_height)
         ctx.fill()
+        ctx.restore()
 
-        # Grid horizontal (líneas de referencia)
-        ctx.set_source_rgba(0.3, 0.3, 0.3, 0.5)
+        # Borde del área del gráfico
+        ctx.save()
+        ctx.set_line_width(1)
+        ctx.set_source_rgba(0.2, 0.2, 0.2, 0.6)
+        ctx.rectangle(margin_left, margin_top, chart_width, chart_height)
+        ctx.stroke()
+        ctx.restore()
+
+        # Grid horizontal mejorado
+        ctx.save()
         ctx.set_line_width(0.5)
         for i in range(5):
             y = margin_top + (chart_height / 4) * i
+            if i == 0 or i == 4:  # Líneas superior e inferior más visibles
+                ctx.set_source_rgba(0.3, 0.3, 0.3, 0.7)
+            else:
+                ctx.set_source_rgba(0.2, 0.2, 0.2, 0.4)
             ctx.move_to(margin_left, y)
             ctx.line_to(margin_left + chart_width, y)
             ctx.stroke()
+        ctx.restore()
 
         # Dibujar línea de datos
         if len(self.data_points) > 1:
             r, g, b = self.color
-
-            # Área bajo la curva (gradiente)
-            ctx.set_source_rgba(r, g, b, 0.2)
             x_step = chart_width / (self.max_points - 1)
+
+            # Área bajo la curva con gradiente
+            ctx.save()
+            pattern = cairo.LinearGradient(margin_left, margin_top + chart_height, margin_left, margin_top)
+            pattern.add_color_stop_rgba(0, r, g, b, 0.3)
+            pattern.add_color_stop_rgba(1, r, g, b, 0.05)
+            ctx.set_source(pattern)
 
             ctx.move_to(margin_left, margin_top + chart_height)
             for i, value in enumerate(self.data_points):
@@ -174,11 +254,18 @@ class MiniLineChartWidget(Gtk.DrawingArea):
             ctx.line_to(margin_left + len(self.data_points) * x_step, margin_top + chart_height)
             ctx.close_path()
             ctx.fill()
+            ctx.restore()
 
-            # Línea principal
-            ctx.set_source_rgb(r, g, b)
-            ctx.set_line_width(2)
+            # Línea principal con gradiente
+            ctx.save()
+            pattern = cairo.LinearGradient(margin_left, 0, margin_left + chart_width, 0)
+            pattern.add_color_stop_rgba(0, r, g, b, 0.8)
+            pattern.add_color_stop_rgba(0.5, r + 0.1, g + 0.1, b + 0.1, 1.0)
+            pattern.add_color_stop_rgba(1, r, g, b, 0.8)
+            ctx.set_source(pattern)
+            ctx.set_line_width(2.5)
             ctx.set_line_join(cairo.LINE_JOIN_ROUND)
+            ctx.set_line_cap(cairo.LINE_CAP_ROUND)
 
             for i, value in enumerate(self.data_points):
                 x = margin_left + i * x_step
@@ -189,32 +276,70 @@ class MiniLineChartWidget(Gtk.DrawingArea):
                 else:
                     ctx.line_to(x, y)
             ctx.stroke()
+            ctx.restore()
 
-            # Puntos en la línea
-            ctx.set_source_rgb(r, g, b)
+            # Puntos en la línea con brillo
+            ctx.save()
             for i, value in enumerate(self.data_points):
                 x = margin_left + i * x_step
                 y = margin_top + chart_height - (value / 100 * chart_height)
-                ctx.arc(x, y, 2, 0, 2 * math.pi)
+                
+                # Sombra del punto
+                ctx.set_source_rgba(0, 0, 0, 0.3)
+                ctx.arc(x + 1, y + 1, 3, 0, 2 * math.pi)
                 ctx.fill()
+                
+                # Punto principal con gradiente
+                pattern = cairo.RadialGradient(x, y, 0, x, y, 3)
+                pattern.add_color_stop_rgba(0, 1, 1, 1, 0.8)
+                pattern.add_color_stop_rgba(0.5, r, g, b, 1.0)
+                pattern.add_color_stop_rgba(1, r * 0.7, g * 0.7, b * 0.7, 1.0)
+                ctx.set_source(pattern)
+                ctx.arc(x, y, 3, 0, 2 * math.pi)
+                ctx.fill()
+                
+                # Brillo central
+                ctx.set_source_rgba(1, 1, 1, 0.6)
+                ctx.arc(x, y, 1.5, 0, 2 * math.pi)
+                ctx.fill()
+            ctx.restore()
 
-        # Título
+        # Título con sombra
         if self.title:
-            ctx.set_source_rgb(0.8, 0.8, 0.8)
+            ctx.save()
             ctx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-            ctx.set_font_size(10)
+            ctx.set_font_size(11)
+            
+            # Sombra del título
+            ctx.set_source_rgba(0, 0, 0, 0.4)
+            ctx.move_to(margin_left + 1, 13)
+            ctx.show_text(self.title)
+            
+            # Título principal
+            ctx.set_source_rgb(0.85, 0.85, 0.85)
             ctx.move_to(margin_left, 12)
             ctx.show_text(self.title)
+            ctx.restore()
 
-        # Valor actual
+        # Valor actual con mejor estilo
         if self.data_points:
             current = self.data_points[-1]
             text = f"{current:.1f}%"
+            ctx.save()
             ctx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-            ctx.set_font_size(10)
+            ctx.set_font_size(11)
+            
+            # Sombra del valor
             text_extents = ctx.text_extents(text)
+            ctx.set_source_rgba(0, 0, 0, 0.4)
+            ctx.move_to(width - margin_right - text_extents.width + 1, 13)
+            ctx.show_text(text)
+            
+            # Valor principal
+            ctx.set_source_rgb(0.95, 0.95, 0.95)
             ctx.move_to(width - margin_right - text_extents.width, 12)
             ctx.show_text(text)
+            ctx.restore()
 
 
 class DiskUsageBarWidget(Gtk.DrawingArea):
@@ -240,40 +365,80 @@ class DiskUsageBarWidget(Gtk.DrawingArea):
         self.queue_draw()
 
     def _on_draw(self, area, ctx, width, height):
-        """Dibuja la barra de disco"""
-        # Fondo
-        ctx.set_source_rgba(0.2, 0.2, 0.2, 0.3)
+        """Dibuja la barra de disco moderna"""
+        # Fondo con gradiente
+        ctx.save()
+        pattern = cairo.LinearGradient(0, 0, 0, height)
+        pattern.add_color_stop_rgba(0, 0.15, 0.15, 0.15, 0.4)
+        pattern.add_color_stop_rgba(1, 0.08, 0.08, 0.08, 0.2)
+        ctx.set_source(pattern)
         ctx.rectangle(0, 0, width, height)
         ctx.fill()
+        ctx.restore()
 
-        # Barra de progreso con gradiente
+        # Borde del fondo
+        ctx.save()
+        ctx.set_line_width(1)
+        ctx.set_source_rgba(0.2, 0.2, 0.2, 0.6)
+        ctx.rectangle(0, 0, width, height)
+        ctx.stroke()
+        ctx.restore()
+
+        # Barra de progreso con efectos modernos
         if self.percentage > 0:
             bar_width = width * (self.percentage / 100)
 
+            # Sombra de la barra
+            ctx.save()
+            ctx.set_source_rgba(0, 0, 0, 0.2)
+            ctx.rectangle(2, 2, bar_width, height)
+            ctx.fill()
+            ctx.restore()
+
             # Crear gradiente según porcentaje
+            ctx.save()
             gradient = cairo.LinearGradient(0, 0, bar_width, 0)
 
             if self.percentage < 70:
-                # Verde
-                gradient.add_color_stop_rgb(0, 0.15, 0.76, 0.41)
-                gradient.add_color_stop_rgb(1, 0.18, 0.85, 0.49)
+                # Verde moderno
+                gradient.add_color_stop_rgb(0, 0.06, 0.73, 0.39)
+                gradient.add_color_stop_rgb(0.5, 0.16, 0.85, 0.49)
+                gradient.add_color_stop_rgb(1, 0.06, 0.73, 0.39)
             elif self.percentage < 85:
-                # Amarillo/Naranja
+                # Amarillo/Naranja moderno
                 gradient.add_color_stop_rgb(0, 0.96, 0.76, 0.07)
-                gradient.add_color_stop_rgb(1, 0.96, 0.65, 0.07)
+                gradient.add_color_stop_rgb(0.5, 0.99, 0.85, 0.15)
+                gradient.add_color_stop_rgb(1, 0.96, 0.76, 0.07)
             else:
-                # Rojo
+                # Rojo moderno
                 gradient.add_color_stop_rgb(0, 0.88, 0.11, 0.14)
-                gradient.add_color_stop_rgb(1, 0.75, 0.07, 0.11)
+                gradient.add_color_stop_rgb(0.5, 0.95, 0.15, 0.18)
+                gradient.add_color_stop_rgb(1, 0.88, 0.11, 0.14)
 
             ctx.set_source(gradient)
             ctx.rectangle(0, 0, bar_width, height)
             ctx.fill()
+            ctx.restore()
 
-        # Texto
-        ctx.set_source_rgb(1, 1, 1)
+            # Brillo superior
+            ctx.save()
+            ctx.set_source_rgba(1, 1, 1, 0.2)
+            ctx.rectangle(0, 0, bar_width, height * 0.3)
+            ctx.fill()
+            ctx.restore()
+
+            # Borde de la barra
+            ctx.save()
+            ctx.set_line_width(1)
+            ctx.set_source_rgba(1, 1, 1, 0.1)
+            ctx.rectangle(0, 0, bar_width, height)
+            ctx.stroke()
+            ctx.restore()
+
+        # Texto con mejor estilo
+        ctx.save()
         ctx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-        ctx.set_font_size(12)
+        ctx.set_font_size(13)
 
         text = f"{self.used_gb:.1f} GB / {self.total_gb:.1f} GB ({self.percentage:.1f}%)"
         text_extents = ctx.text_extents(text)
@@ -281,11 +446,12 @@ class DiskUsageBarWidget(Gtk.DrawingArea):
         text_y = (height + text_extents.height) / 2 - 2
 
         # Sombra del texto
-        ctx.set_source_rgba(0, 0, 0, 0.5)
+        ctx.set_source_rgba(0, 0, 0, 0.6)
         ctx.move_to(text_x + 1, text_y + 1)
         ctx.show_text(text)
 
         # Texto principal
-        ctx.set_source_rgb(1, 1, 1)
+        ctx.set_source_rgb(0.95, 0.95, 0.95)
         ctx.move_to(text_x, text_y)
         ctx.show_text(text)
+        ctx.restore()

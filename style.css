@@ -1,91 +1,146 @@
-/* Estilos para el Panel de VMs */
+/* Estilos modernos para el Panel de VMs */
+
+/* Variables CSS personalizadas */
+:root {
+    --primary-color: #3b82f6;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --surface-color: #1f2937;
+    --surface-variant: #374151;
+    --on-surface: #f9fafb;
+    --on-surface-variant: #d1d5db;
+    --border-color: #4b5563;
+    --shadow-color: rgba(0, 0, 0, 0.25);
+    --shadow-elevated: rgba(0, 0, 0, 0.4);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 24px;
+    --spacing-2xl: 32px;
+}
 
 /* Estilos generales de la ventana */
 window {
-    background: @theme_bg_color;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: var(--on-surface);
 }
 
-/* Estilo para las tarjetas de VM */
+/* Estilo moderno para las tarjetas de VM */
 .vm-card {
-    background: @card_bg_color;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin: 8px;
-    transition: all 200ms ease;
+    background: linear-gradient(145deg, #1f2937 0%, #374151 100%);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: var(--radius-lg);
+    box-shadow: 
+        0 4px 6px -1px var(--shadow-color),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    margin: var(--spacing-sm);
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
 }
 
 .vm-card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 
+        0 20px 25px -5px var(--shadow-elevated),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-color: rgba(59, 130, 246, 0.5);
 }
 
-/* Indicadores de estado */
+/* Indicadores de estado modernos */
 .status-running {
-    color: @success_color;
-    font-weight: bold;
+    color: var(--success-color);
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
 }
 
 .status-stopped {
-    color: @error_color;
-    font-weight: bold;
+    color: var(--error-color);
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
 }
 
 .status-paused {
-    color: @warning_color;
-    font-weight: bold;
+    color: var(--warning-color);
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
 }
 
-/* Botones personalizados */
+/* Botones modernos con glassmorphism */
 .vm-control-button {
-    min-height: 36px;
-    min-width: 80px;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 150ms ease;
+    min-height: 40px;
+    min-width: 90px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .vm-control-button:hover {
-    transform: scale(1.05);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.vm-control-button:active {
+    transform: translateY(0) scale(0.98);
 }
 
 .start-button {
-    background: linear-gradient(135deg, @success_color, #2ec27e);
+    background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
     color: white;
-    border: none;
+    border-color: rgba(16, 185, 129, 0.3);
 }
 
 .start-button:hover {
-    background: linear-gradient(135deg, #2ec27e, @success_color);
+    background: linear-gradient(135deg, #059669 0%, var(--success-color) 100%);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
 }
 
 .stop-button {
-    background: linear-gradient(135deg, @destructive_color, #e01b24);
+    background: linear-gradient(135deg, var(--error-color) 0%, #dc2626 100%);
     color: white;
-    border: none;
+    border-color: rgba(239, 68, 68, 0.3);
 }
 
 .stop-button:hover {
-    background: linear-gradient(135deg, #e01b24, @destructive_color);
+    background: linear-gradient(135deg, #dc2626 0%, var(--error-color) 100%);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
 }
 
 .restart-button {
-    background: linear-gradient(135deg, @accent_color, #1c71d8);
+    background: linear-gradient(135deg, var(--primary-color) 0%, #2563eb 100%);
     color: white;
-    border: none;
+    border-color: rgba(59, 130, 246, 0.3);
 }
 
 .restart-button:hover {
-    background: linear-gradient(135deg, #1c71d8, @accent_color);
+    background: linear-gradient(135deg, #2563eb 0%, var(--primary-color) 100%);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
 }
 
 .pause-button {
-    background: linear-gradient(135deg, @warning_color, #f5c211);
-    color: @dark_1;
-    border: none;
+    background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+    color: #1f2937;
+    border-color: rgba(245, 158, 11, 0.3);
 }
 
 .pause-button:hover {
-    background: linear-gradient(135deg, #f5c211, @warning_color);
+    background: linear-gradient(135deg, #d97706 0%, var(--warning-color) 100%);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
 }
 
 /* Título principal */
@@ -237,46 +292,82 @@ expander > box {
     transition: all 200ms ease;
 }
 
-/* === DASHBOARD ESTILO PROXMOX === */
+/* === DASHBOARD MODERNO === */
 
-/* Stats cards del dashboard */
+/* Stats cards del dashboard con glassmorphism */
 .stat-card-success {
-    background: linear-gradient(135deg, rgba(38, 162, 105, 0.1), rgba(46, 194, 126, 0.05));
-    border: 1px solid rgba(38, 162, 105, 0.3);
-    border-radius: 12px;
-    transition: all 200ms ease;
+    background: linear-gradient(145deg, 
+        rgba(16, 185, 129, 0.1) 0%, 
+        rgba(5, 150, 105, 0.05) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(10px);
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .stat-card-success:hover {
-    background: linear-gradient(135deg, rgba(38, 162, 105, 0.15), rgba(46, 194, 126, 0.08));
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(38, 162, 105, 0.2);
+    background: linear-gradient(145deg, 
+        rgba(16, 185, 129, 0.15) 0%, 
+        rgba(5, 150, 105, 0.08) 100%);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 
+        0 20px 25px -5px rgba(16, 185, 129, 0.2),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-color: rgba(16, 185, 129, 0.4);
 }
 
 .stat-card-info {
-    background: linear-gradient(135deg, rgba(28, 113, 216, 0.1), rgba(53, 132, 228, 0.05));
-    border: 1px solid rgba(28, 113, 216, 0.3);
-    border-radius: 12px;
-    transition: all 200ms ease;
+    background: linear-gradient(145deg, 
+        rgba(59, 130, 246, 0.1) 0%, 
+        rgba(37, 99, 235, 0.05) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(10px);
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .stat-card-info:hover {
-    background: linear-gradient(135deg, rgba(28, 113, 216, 0.15), rgba(53, 132, 228, 0.08));
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(28, 113, 216, 0.2);
+    background: linear-gradient(145deg, 
+        rgba(59, 130, 246, 0.15) 0%, 
+        rgba(37, 99, 235, 0.08) 100%);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 
+        0 20px 25px -5px rgba(59, 130, 246, 0.2),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-color: rgba(59, 130, 246, 0.4);
 }
 
 .stat-card-warning {
-    background: linear-gradient(135deg, rgba(230, 97, 0, 0.1), rgba(245, 194, 17, 0.05));
-    border: 1px solid rgba(230, 97, 0, 0.3);
-    border-radius: 12px;
-    transition: all 200ms ease;
+    background: linear-gradient(145deg, 
+        rgba(245, 158, 11, 0.1) 0%, 
+        rgba(217, 119, 6, 0.05) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(10px);
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .stat-card-warning:hover {
-    background: linear-gradient(135deg, rgba(230, 97, 0, 0.15), rgba(245, 194, 17, 0.08));
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(230, 97, 0, 0.2);
+    background: linear-gradient(145deg, 
+        rgba(245, 158, 11, 0.15) 0%, 
+        rgba(217, 119, 6, 0.08) 100%);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 
+        0 20px 25px -5px rgba(245, 158, 11, 0.2),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-color: rgba(245, 158, 11, 0.4);
 }
 
 /* Grid de VMs estilo Proxmox */
@@ -350,8 +441,118 @@ separator.dashboard-separator {
     font-weight: 700;
 }
 
-/* Efectos glassmorphism sutiles */
+/* Efectos glassmorphism modernos */
 .glass-card {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    box-shadow: 
+        0 8px 32px 0 rgba(31, 38, 135, 0.37),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Mini cards modernas */
+.mini-stat {
+    background: linear-gradient(145deg, 
+        rgba(55, 65, 81, 0.8) 0%, 
+        rgba(31, 41, 55, 0.9) 100%);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(10px);
+    transition: all 250ms ease;
+}
+
+.mini-stat:hover {
+    transform: translateY(-2px);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Mejoras en tabs */
+tab {
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    transition: all 200ms ease;
+}
+
+tab:checked {
+    background: linear-gradient(145deg, 
+        rgba(59, 130, 246, 0.1) 0%, 
+        rgba(37, 99, 235, 0.05) 100%);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Animaciones mejoradas */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        opacity: 1; 
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 0.8; 
+        transform: scale(1.05);
+    }
+}
+
+@keyframes glow {
+    0%, 100% { 
+        box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+    }
+    50% { 
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+    }
+}
+
+/* Estados de carga */
+.loading {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.glow-effect {
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* Mejoras en separadores */
+separator {
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(75, 85, 99, 0.3) 50%, 
+        transparent 100%);
+    min-height: 1px;
+    margin: var(--spacing-lg) 0;
+}
+
+/* Mejoras en tooltips */
+tooltip {
+    background: rgba(31, 41, 55, 0.95);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: var(--radius-sm);
+    color: var(--on-surface);
+    backdrop-filter: blur(10px);
+}
+
+/* Scrollbar personalizada */
+scrollbar {
+    background: rgba(31, 41, 55, 0.3);
+    border-radius: var(--radius-sm);
+}
+
+scrollbar slider {
+    background: rgba(75, 85, 99, 0.5);
+    border-radius: var(--radius-sm);
+    min-width: 8px;
+}
+
+scrollbar slider:hover {
+    background: rgba(59, 130, 246, 0.6);
 }

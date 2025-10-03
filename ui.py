@@ -525,23 +525,29 @@ class VMCard(Gtk.Box):
                     else:
                         self.cpu_label.set_text(f"⚙️ CPU: {vcpu_current} vCPUs activas")
 
-                    # Memoria básica con balloon driver
-                    mem_usage_info = self.vm_manager.get_vm_memory_usage(self.vm_name)
-                    mem_actual = detailed_stats.get('memory_actual')
-                    mem_available = detailed_stats.get('memory_available')
+                    # Memoria básica - usar datos consistentes de domstats
+                    mem_actual = detailed_stats.get('memory_actual')  # Memoria asignada al balloon
+                    mem_available = detailed_stats.get('memory_available')  # Memoria máxima configurada
+                    mem_unused = detailed_stats.get('memory_unused')  # Memoria no usada dentro del guest
+                    mem_rss = detailed_stats.get('memory_rss')  # Memoria RSS del host
 
-                    if mem_usage_info and 'actual' in mem_usage_info and 'unused' in mem_usage_info:
-                        # Usar balloon stats para mostrar uso real dentro del guest
-                        actual_kb = mem_usage_info['actual']
-                        unused_kb = mem_usage_info['unused']
-                        used_kb = actual_kb - unused_kb
+                    if mem_actual and mem_unused is not None:
+                        # Calcular memoria usada dentro del guest (más preciso)
+                        used_kb = mem_actual - mem_unused
                         mem_gb_used = used_kb / (1024 * 1024)
-                        mem_percent = (used_kb / actual_kb) * 100
-                        self.memory_label.set_text(f"💾 Memoria: {mem_gb_used:.1f} GB ({mem_percent:.0f}%)")
-                    elif mem_actual and mem_available:
-                        # Fallback: memoria asignada
-                        mem_actual_gb = mem_actual / (1024 * 1024)
-                        self.memory_label.set_text(f"💾 Memoria: {mem_actual_gb:.1f} GB (Asignada)")
+                        mem_gb_total = mem_actual / (1024 * 1024)
+                        mem_percent = (used_kb / mem_actual) * 100 if mem_actual > 0 else 0
+                        self.memory_label.set_text(f"💾 Memoria: {mem_gb_used:.1f}/{mem_gb_total:.1f} GB ({mem_percent:.0f}%)")
+                    elif mem_actual and mem_rss:
+                        # Usar RSS como aproximación del uso real
+                        mem_gb_actual = mem_actual / (1024 * 1024)
+                        mem_gb_rss = mem_rss / (1024 * 1024)
+                        mem_percent = (mem_rss / mem_actual) * 100 if mem_actual > 0 else 0
+                        self.memory_label.set_text(f"💾 Memoria: {mem_gb_rss:.1f}/{mem_gb_actual:.1f} GB ({mem_percent:.0f}%)")
+                    elif mem_actual:
+                        # Fallback: solo memoria asignada
+                        mem_gb_actual = mem_actual / (1024 * 1024)
+                        self.memory_label.set_text(f"💾 Memoria: {mem_gb_actual:.1f} GB (Asignada)")
                     else:
                         self.memory_label.set_text("💾 Memoria: N/A")
 
@@ -594,33 +600,36 @@ class VMCard(Gtk.Box):
         self.last_cpu_time = cpu_time
         self.last_update_time = current_time
 
-        # Memoria: calcular uso real desde balloon driver
-        mem_usage_info = self.vm_manager.get_vm_memory_usage(self.vm_name)
+        # Memoria: usar datos consistentes de domstats
         mem_percent = 0
         mem_label = ""
+        mem_rss = stats.get('memory_rss')
 
-        if mem_usage_info and 'actual' in mem_usage_info and 'unused' in mem_usage_info:
-            # Tenemos balloon stats: calcular memoria usada dentro del guest
-            actual_kb = mem_usage_info['actual']
-            unused_kb = mem_usage_info['unused']
-            used_kb = actual_kb - unused_kb
-
-            # Calcular porcentaje sobre la memoria asignada
-            mem_percent = (used_kb / actual_kb) * 100
+        if mem_actual and mem_unused is not None:
+            # Calcular memoria usada dentro del guest (más preciso)
+            used_kb = mem_actual - mem_unused
+            mem_percent = (used_kb / mem_actual) * 100 if mem_actual > 0 else 0
             mem_gb_used = used_kb / (1024 * 1024)
-            mem_label = f"{mem_gb_used:.1f} GB"
-        elif mem_actual and mem_available:
+            mem_gb_total = mem_actual / (1024 * 1024)
+            mem_label = f"{mem_gb_used:.1f}/{mem_gb_total:.1f} GB"
+        elif mem_actual and mem_rss:
+            # Usar RSS como aproximación del uso real
+            mem_percent = (mem_rss / mem_actual) * 100 if mem_actual > 0 else 0
+            mem_gb_rss = mem_rss / (1024 * 1024)
+            mem_gb_total = mem_actual / (1024 * 1024)
+            mem_label = f"{mem_gb_rss:.1f}/{mem_gb_total:.1f} GB"
+        elif mem_actual:
             # Fallback: mostrar memoria asignada
             mem_gb = mem_actual / (1024 * 1024)
-            mem_percent = 50  # Valor fijo visual
-            mem_label = f"{mem_gb:.1f} GB"
+            mem_percent = 50  # Valor fijo visual para gráfico
+            mem_label = f"{mem_gb:.1f} GB (Asignada)"
 
         # Actualizar gráficos circulares
         self.cpu_circular.set_value(cpu_percent, f"{cpu_percent:.1f}%", "CPU")
         self.memory_circular.set_value(
             mem_percent,
             f"{mem_percent:.1f}%",
-            "RAM" if mem_usage_info and 'rss' in mem_usage_info else "RAM Asignada"
+            "RAM Guest" if mem_unused is not None else ("RAM RSS" if mem_rss else "RAM Asignada")
         )
 
         # Agregar al historial
@@ -1138,13 +1147,23 @@ class VMPanelWindow(Adw.ApplicationWindow):
             f'<span size="x-large" weight="bold">~{avg_cpu:.1f}%</span>'
         )
 
-        # RAM total
+        # RAM total (usar datos consistentes de domstats)
         total_ram_gb = 0
         for vm_card in self.vm_cards.values():
-            mem_info = self.vm_manager.get_vm_memory_usage(vm_card.vm_name)
-            if mem_info and 'actual' in mem_info and 'unused' in mem_info:
-                used_kb = mem_info['actual'] - mem_info['unused']
-                total_ram_gb += used_kb / (1024 * 1024)
+            stats = self.vm_manager.get_vm_detailed_stats(vm_card.vm_name)
+            if stats:
+                mem_actual = stats.get('memory_actual')
+                mem_unused = stats.get('memory_unused')
+                mem_rss = stats.get('memory_rss')
+                if mem_actual and mem_unused is not None:
+                    used_kb = mem_actual - mem_unused
+                    total_ram_gb += used_kb / (1024 * 1024)
+                elif mem_actual and mem_rss:
+                    # Usar RSS como aproximación
+                    total_ram_gb += mem_rss / (1024 * 1024)
+                elif mem_actual:
+                    # Fallback: usar memoria asignada
+                    total_ram_gb += mem_actual / (1024 * 1024)
 
         self.total_ram_card.value_label.set_markup(
             f'<span size="x-large" weight="bold">{total_ram_gb:.1f} GB</span>'

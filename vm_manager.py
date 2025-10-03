@@ -381,6 +381,97 @@ class VMManager:
             logger.error(f"Error obteniendo memory usage de {vm_name}: {e}")
             return None
 
+    def debug_vm_memory(self, vm_name: str) -> Dict:
+        """Función de debug para mostrar todos los datos de memoria disponibles"""
+        debug_info = {
+            'vm_name': vm_name,
+            'dommemstat': None,
+            'domstats': None,
+            'calculations': {}
+        }
+        
+        # Obtener dommemstat
+        try:
+            success, stdout, stderr = self._run_virsh_command(["dommemstat", vm_name])
+            if success:
+                memory_info = {}
+                for line in stdout.strip().split('\n'):
+                    if line.strip():
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            key = parts[0]
+                            value = parts[1]
+                            memory_info[key] = int(value)
+                debug_info['dommemstat'] = memory_info
+        except Exception as e:
+            debug_info['dommemstat'] = f"Error: {e}"
+        
+        # Obtener domstats
+        try:
+            success, stdout, stderr = self._run_virsh_command(["domstats", vm_name])
+            if success:
+                stats = {}
+                for line in stdout.split('\n'):
+                    line = line.strip()
+                    if '=' not in line:
+                        continue
+                    key, value = line.split('=', 1)
+                    key = key.strip()
+                    value = value.strip()
+                    
+                    # Solo métricas de memoria
+                    if any(mem_key in key for mem_key in ['memory', 'balloon']):
+                        try:
+                            stats[key] = int(value)
+                        except ValueError:
+                            stats[key] = value
+                debug_info['domstats'] = stats
+        except Exception as e:
+            debug_info['domstats'] = f"Error: {e}"
+        
+        # Calcular métricas
+        domstats = debug_info.get('domstats', {})
+        if isinstance(domstats, dict):
+            mem_actual = domstats.get('balloon.current')
+            mem_unused = domstats.get('memory.unused')
+            mem_available = domstats.get('balloon.maximum')
+            mem_rss = domstats.get('balloon.rss')
+            
+            if mem_actual and mem_unused is not None:
+                # Método preferido: usar memory.unused
+                used_kb = mem_actual - mem_unused
+                used_gb = used_kb / (1024 * 1024)
+                total_gb = mem_actual / (1024 * 1024)
+                percent = (used_kb / mem_actual) * 100 if mem_actual > 0 else 0
+                
+                debug_info['calculations'] = {
+                    'method': 'memory.unused',
+                    'mem_actual_kb': mem_actual,
+                    'mem_unused_kb': mem_unused,
+                    'mem_used_kb': used_kb,
+                    'mem_used_gb': used_gb,
+                    'mem_total_gb': total_gb,
+                    'mem_percent': percent
+                }
+            elif mem_actual and mem_rss:
+                # Método alternativo: usar RSS
+                used_kb = mem_rss
+                used_gb = used_kb / (1024 * 1024)
+                total_gb = mem_actual / (1024 * 1024)
+                percent = (mem_rss / mem_actual) * 100 if mem_actual > 0 else 0
+                
+                debug_info['calculations'] = {
+                    'method': 'RSS',
+                    'mem_actual_kb': mem_actual,
+                    'mem_rss_kb': mem_rss,
+                    'mem_used_kb': used_kb,
+                    'mem_used_gb': used_gb,
+                    'mem_total_gb': total_gb,
+                    'mem_percent': percent
+                }
+        
+        return debug_info
+
     def get_vm_detailed_stats(self, vm_name: str) -> Optional[Dict]:
         """Obtiene estadísticas detalladas de CPU, memoria, disco y red"""
         try:
