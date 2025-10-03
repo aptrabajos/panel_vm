@@ -591,8 +591,91 @@ class VMCard(Gtk.Box):
             else:
                 return f"{bytes_val} B"
 
-        self.net_rx_label.set_text(f"⬇️ Recibido: {format_bytes(rx_bytes)}")
-        self.net_tx_label.set_text(f"⬆️ Enviado: {format_bytes(tx_bytes)}")
+        self.net_rx_label.set_text(f"⬇️ Recibido total: {format_bytes(rx_bytes)}")
+        self.net_tx_label.set_text(f"⬆️ Enviado total: {format_bytes(tx_bytes)}")
+
+        # === Información Avanzada ===
+
+        # Interfaces de red con detalles
+        net_interfaces = self.vm_manager.get_vm_network_interfaces(self.vm_name)
+        if net_interfaces:
+            ifaces_text = "🔌 Interfaces: "
+            iface_details = []
+            for iface in net_interfaces:
+                mac = iface.get('mac', 'N/A')
+                model = iface.get('model', 'N/A')
+                state = iface.get('link_state', 'up')
+                state_icon = "🟢" if state == "up" else "🔴"
+                source = iface.get('source', 'N/A')
+                iface_details.append(f"{state_icon} {mac} ({model}) → {source}")
+
+            # Mostrar drops y errores si están disponibles
+            net_rx_drop = stats.get('net_rx_drop', 0)
+            net_tx_drop = stats.get('net_tx_drop', 0)
+            if net_rx_drop > 0 or net_tx_drop > 0:
+                iface_details.append(f"⚠️ Drops: RX {net_rx_drop}, TX {net_tx_drop}")
+
+            self.net_interfaces_label.set_text(ifaces_text + ", ".join(iface_details))
+        else:
+            self.net_interfaces_label.set_text("🔌 Interfaces: N/A")
+
+        # Drivers virtio
+        virtio_info = self.vm_manager.get_vm_virtio_drivers(self.vm_name)
+        if virtio_info:
+            virtio_enabled = [k for k, v in virtio_info.items() if v]
+            if virtio_enabled:
+                self.virtio_drivers_label.set_text(f"⚡ Virtio: {', '.join(virtio_enabled)}")
+            else:
+                self.virtio_drivers_label.set_text("⚡ Virtio: Ninguno activo")
+        else:
+            self.virtio_drivers_label.set_text("⚡ Virtio: N/A")
+
+        # CPU features (solo mostrar los más importantes)
+        cpu_features = self.vm_manager.get_vm_cpu_features(self.vm_name)
+        if cpu_features:
+            # Filtrar solo features importantes (SSE, AVX, etc.)
+            important = [f for f in cpu_features if any(x in f.lower() for x in ['sse', 'avx', 'aes', 'mode:'])]
+            if important:
+                self.cpu_features_label.set_text(f"🔧 CPU: {', '.join(important[:10])}")
+            else:
+                self.cpu_features_label.set_text(f"🔧 CPU: {len(cpu_features)} features habilitados")
+        else:
+            self.cpu_features_label.set_text("🔧 CPU: N/A")
+
+        # Hugepages
+        hugepages = self.vm_manager.get_vm_hugepages(self.vm_name)
+        if hugepages and hugepages.get('enabled'):
+            pages_info = hugepages.get('pages', [])
+            if pages_info:
+                page_sizes = [f"{p['size']}{p['unit']}" for p in pages_info]
+                self.hugepages_label.set_text(f"📄 Hugepages: Habilitadas ({', '.join(page_sizes)})")
+            else:
+                self.hugepages_label.set_text("📄 Hugepages: Habilitadas")
+        else:
+            self.hugepages_label.set_text("📄 Hugepages: Deshabilitadas")
+
+        # Blkio weight
+        blkio_weight = self.vm_manager.get_vm_blkio_weight(self.vm_name)
+        if blkio_weight:
+            priority = "Alta" if blkio_weight > 700 else ("Normal" if blkio_weight >= 300 else "Baja")
+            self.blkio_label.set_text(f"⚖️ Prioridad I/O: {blkio_weight} ({priority})")
+        else:
+            self.blkio_label.set_text("⚖️ Prioridad I/O: N/A")
+
+        # Temperatura del host
+        host_temp = self.vm_manager.get_vm_host_cpu_temp()
+        if host_temp:
+            temp_color = "🟢" if host_temp < 60 else ("🟡" if host_temp < 80 else "🔴")
+            self.host_temp_label.set_text(f"{temp_color} Temp. Host: {host_temp:.1f}°C")
+        else:
+            self.host_temp_label.set_text("🌡️ Temp. Host: N/A")
+
+        # Usuarios conectados
+        users = self.vm_manager.get_vm_guest_users(self.vm_name)
+        if users:
+            self.guest_users_label.set_text(f"👥 Usuarios: {', '.join(users)}")
+        else:
+            self.guest_users_label.set_text("👥 Usuarios: Ninguno")
 
     def _clear_detailed_stats(self):
         """Limpia las estadísticas detalladas"""
