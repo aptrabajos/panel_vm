@@ -609,11 +609,15 @@ class VMCard(Gtk.Box):
             self.disk_detail_label.set_text(f"Dispositivos: {stats.get('block_count', 0)}")
             self.disk_iops_label.set_text(f"📊 IOPS: {read_iops:.1f} lectura/s, {write_iops:.1f} escritura/s")
             self.disk_latency_label.set_text(f"⏱️ Latencia: {avg_read_latency_ms:.2f}ms lectura, {avg_write_latency_ms:.2f}ms escritura")
+
+            # Actualizar quick stat de disco
+            self.disk_mini_value.set_markup(f'<span size="large" weight="bold">{allocation_gb:.1f}/{capacity_gb:.1f} GB</span>')
         else:
             self.disk_usage_bar.set_value(0, 0, 0)
             self.disk_detail_label.set_text("Sin información de disco")
             self.disk_iops_label.set_text("")
             self.disk_latency_label.set_text("")
+            self.disk_mini_value.set_markup('<span size="large">N/A</span>')
 
         # Red con formato
         rx_bytes = stats.get('net_rx_bytes', 0)
