@@ -99,28 +99,85 @@ class VMCard(Gtk.Box):
 
         # Expander para detalles avanzados
         self.details_expander = Gtk.Expander()
-        self.details_expander.set_label("📊 Ver detalles avanzados con gráficos")
+        self.details_expander.set_label("📊 Ver detalles avanzados")
 
         # Contenedor de detalles
-        details_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        details_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
         details_box.set_margin_top(12)
 
-        # === Gráficos Circulares (CPU y Memoria) ===
-        graphs_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-        graphs_row.set_halign(Gtk.Align.CENTER)
+        # === QUICK STATS EN GRID ===
+        quick_stats_grid = Gtk.Grid()
+        quick_stats_grid.set_row_spacing(12)
+        quick_stats_grid.set_column_spacing(12)
+        quick_stats_grid.set_column_homogeneous(True)
 
-        # Gráfico circular de CPU
-        self.cpu_circular = CircularProgressWidget(size=140)
+        # Gráficos circulares compactos
+        self.cpu_circular = CircularProgressWidget(size=100)
         self.cpu_circular.set_value(0, "0%", "CPU")
-        graphs_row.append(self.cpu_circular)
+        quick_stats_grid.attach(self.cpu_circular, 0, 0, 1, 1)
 
-        # Gráfico circular de Memoria
-        self.memory_circular = CircularProgressWidget(size=140)
-        self.memory_circular.set_value(0, "0 GB", "RAM Asignada")
-        graphs_row.append(self.memory_circular)
+        self.memory_circular = CircularProgressWidget(size=100)
+        self.memory_circular.set_value(0, "0%", "RAM")
+        quick_stats_grid.attach(self.memory_circular, 1, 0, 1, 1)
 
-        details_box.append(graphs_row)
+        # Mini card de disco
+        disk_mini_card = Gtk.Frame()
+        disk_mini_card.set_css_classes(['card', 'mini-stat'])
+        disk_mini_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        disk_mini_box.set_margin_top(8)
+        disk_mini_box.set_margin_bottom(8)
+        disk_mini_box.set_margin_start(8)
+        disk_mini_box.set_margin_end(8)
+        disk_mini_title = Gtk.Label()
+        disk_mini_title.set_markup('<span size="small" weight="bold">💾 Disco</span>')
+        self.disk_mini_value = Gtk.Label()
+        self.disk_mini_value.set_markup('<span size="large">N/A</span>')
+        disk_mini_box.append(disk_mini_title)
+        disk_mini_box.append(self.disk_mini_value)
+        disk_mini_card.set_child(disk_mini_box)
+        quick_stats_grid.attach(disk_mini_card, 2, 0, 1, 1)
+
+        # Mini card de red
+        net_mini_card = Gtk.Frame()
+        net_mini_card.set_css_classes(['card', 'mini-stat'])
+        net_mini_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        net_mini_box.set_margin_top(8)
+        net_mini_box.set_margin_bottom(8)
+        net_mini_box.set_margin_start(8)
+        net_mini_box.set_margin_end(8)
+        net_mini_title = Gtk.Label()
+        net_mini_title.set_markup('<span size="small" weight="bold">🌐 Red</span>')
+        self.net_mini_value = Gtk.Label()
+        self.net_mini_value.set_markup('<span size="large">N/A</span>')
+        net_mini_box.append(net_mini_title)
+        net_mini_box.append(self.net_mini_value)
+        net_mini_card.set_child(net_mini_box)
+        quick_stats_grid.attach(net_mini_card, 3, 0, 1, 1)
+
+        details_box.append(quick_stats_grid)
         details_box.append(Gtk.Separator())
+
+        # === TABS PARA ORGANIZAR CONTENIDO ===
+        tab_view = Adw.TabView()
+        tab_view.set_vexpand(True)
+
+        # TAB 1: Rendimiento
+        self._create_performance_tab(tab_view)
+
+        # TAB 2: Almacenamiento
+        self._create_storage_tab(tab_view)
+
+        # TAB 3: Red
+        self._create_network_tab(tab_view)
+
+        # TAB 4: Sistema
+        self._create_system_tab(tab_view)
+
+        # Agregar tab bar
+        tab_bar = Adw.TabBar()
+        tab_bar.set_view(tab_view)
+        details_box.append(tab_bar)
+        details_box.append(tab_view)
 
         # === Mini gráficos de línea (historial) ===
         charts_label = Gtk.Label()
