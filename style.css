@@ -143,6 +143,17 @@ window {
     box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
 }
 
+.viewer-button {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.viewer-button:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
 /* Título principal */
 .main-title {
     font-size: 24px;

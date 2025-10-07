@@ -198,12 +198,18 @@ class VMCard(Gtk.Box):
         self.destroy_btn = Gtk.Button.new_with_label("Forzar")
         self.destroy_btn.set_css_classes(['vm-control-button', 'stop-button'])
         self.destroy_btn.connect('clicked', self.on_destroy_clicked)
-        
+
+        self.viewer_btn = Gtk.Button.new_with_label("🖥️ Viewer")
+        self.viewer_btn.set_css_classes(['vm-control-button', 'viewer-button'])
+        self.viewer_btn.set_tooltip_text("Abrir consola gráfica de la VM")
+        self.viewer_btn.connect('clicked', self.on_viewer_clicked)
+
         button_box.append(self.start_btn)
         button_box.append(self.shutdown_btn)
         button_box.append(self.reboot_btn)
         button_box.append(self.save_btn)
         button_box.append(self.destroy_btn)
+        button_box.append(self.viewer_btn)
         
         # Ensamblar la tarjeta
         card_content.append(header_box)
@@ -941,6 +947,10 @@ class VMCard(Gtk.Box):
             )
         else:
             self.execute_vm_action(self.vm_manager.destroy_vm, f"VM '{self.vm_name}' apagada forzadamente", "destroy")
+
+    def on_viewer_clicked(self, button):
+        """Maneja el clic del botón Viewer"""
+        self.execute_vm_action(self.vm_manager.open_viewer, f"Abriendo viewer para '{self.vm_name}'", "viewer")
 
 
 class VMPanelWindow(Adw.ApplicationWindow):

@@ -927,6 +927,45 @@ class VMManager:
             logger.error(f"Error obteniendo blkio weight de {vm_name}: {e}")
             return None
 
+    def open_viewer(self, vm_name: str) -> Tuple[bool, Optional[Dict[str, str]]]:
+        """Abre el visor gráfico (virt-viewer) para una VM. Retorna (éxito, info_error)"""
+        try:
+            # Verificar si virt-viewer está instalado
+            result = subprocess.run(["which", "virt-viewer"], capture_output=True, text=True)
+            if result.returncode != 0:
+                error_info = {
+                    "type": "not_found",
+                    "message": "virt-viewer no está instalado",
+                    "suggestion": "Instala virt-viewer: sudo pacman -S virt-viewer"
+                }
+                logger.error("virt-viewer no está instalado")
+                return False, error_info
+
+            # Abrir virt-viewer en segundo plano con --attach para conectarse a sesión existente
+            # y preservar las variables de entorno necesarias
+            import os
+            env = os.environ.copy()
+
+            subprocess.Popen(
+                ["virt-viewer", "--connect", self.connection_uri, "--attach", vm_name],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                env=env,
+                start_new_session=False  # No crear nueva sesión para mantener acceso a display
+            )
+
+            logger.info(f"Viewer abierto para {vm_name}")
+            return True, None
+
+        except Exception as e:
+            error_info = {
+                "type": "exception",
+                "message": f"Error al abrir viewer: {str(e)}",
+                "suggestion": "Verifica que virt-viewer esté instalado correctamente"
+            }
+            logger.error(f"Error abriendo viewer para {vm_name}: {e}")
+            return False, error_info
+
     def _check_system_requirements(self):
         """Verifica los requisitos del sistema"""
         try:
@@ -935,13 +974,13 @@ class VMManager:
             if result.returncode != 0:
                 logger.warning("virsh no está instalado o no está en el PATH")
                 return
-            
+
             # Verificar si libvirtd está ejecutándose
             result = subprocess.run(["systemctl", "is-active", "libvirtd"], capture_output=True, text=True)
             if result.returncode != 0:
                 logger.warning("libvirtd no está ejecutándose")
                 return
-            
+
             logger.info("Requisitos del sistema verificados correctamente")
         except Exception as e:
             logger.warning(f"Error verificando requisitos del sistema: {e}")
